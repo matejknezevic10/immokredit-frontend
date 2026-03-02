@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/funnel.html", "destination": "/funnel.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
