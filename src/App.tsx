@@ -1,6 +1,7 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/useAuthStore';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { Dashboard } from './pages/Dashboard/Dashboard';
@@ -9,6 +10,7 @@ import { PipelinePage } from './pages/Pipeline/PipelinePage';
 import { LoginPage } from './pages/Login/LoginPage';
 import { JeffreyChat } from './components/Chat/JeffreyChat';
 import DocumentsPage from './pages/Documents/DocumentsPage';
+import { SettingsPage } from './pages/Settings/SettingsPage';
 import {
   KundePage,
   KundeDetailPage,
@@ -17,17 +19,29 @@ import {
   KundeFinanzplanPage,
   KundeObjektPage,
 } from './pages/Kunde';
+import { SecureDownloadPage } from './pages/SecureDownload/SecureDownloadPage';
 import logoImg from './assets/logo.png';
 import './styles/global.css';
 import './styles/mobile.css';
 import './App.css';
 
-function App() {
+// Inner component that handles auth-gated vs public routes
+function AppRoutes() {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const location = useLocation();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Public route — no auth required
+  if (location.pathname.startsWith('/secure-download')) {
+    return (
+      <Routes>
+        <Route path="/secure-download/:accessToken" element={<SecureDownloadPage />} />
+      </Routes>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -54,27 +68,54 @@ function App() {
   }
 
   return (
+    <div className="app-container">
+      <Sidebar />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/pipeline" element={<PipelinePage />} />
+          <Route path="/leads" element={<LeadsPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/kunde" element={<KundePage />} />
+          <Route path="/kunde/:leadId" element={<KundeDetailPage />} />
+          <Route path="/kunde/:leadId/person" element={<KundePersonPage />} />
+          <Route path="/kunde/:leadId/haushalt" element={<KundeHaushaltPage />} />
+          <Route path="/kunde/:leadId/finanzplan" element={<KundeFinanzplanPage />} />
+          <Route path="/kunde/:leadId/objekt" element={<KundeObjektPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/mails" element={<ComingSoon title="Mails" />} />
+        </Routes>
+      </main>
+      <JeffreyChat />
+    </div>
+  );
+}
+
+function App() {
+  return (
     <Router>
-      <div className="app-container">
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/pipeline" element={<PipelinePage />} />
-            <Route path="/leads" element={<LeadsPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/kunde" element={<KundePage />} />
-            <Route path="/kunde/:leadId" element={<KundeDetailPage />} />
-            <Route path="/kunde/:leadId/person" element={<KundePersonPage />} />
-            <Route path="/kunde/:leadId/haushalt" element={<KundeHaushaltPage />} />
-            <Route path="/kunde/:leadId/finanzplan" element={<KundeFinanzplanPage />} />
-            <Route path="/kunde/:leadId/objekt" element={<KundeObjektPage />} />
-            <Route path="/settings" element={<ComingSoon title="Einstellungen" />} />
-            <Route path="/mails" element={<ComingSoon title="Mails" />} />
-          </Routes>
-        </main>
-        <JeffreyChat />
-      </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            fontFamily: 'Outfit, sans-serif',
+            fontSize: '14px',
+            borderRadius: '10px',
+            padding: '12px 16px',
+          },
+          success: {
+            style: { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' },
+            iconTheme: { primary: '#10b981', secondary: '#ecfdf5' },
+          },
+          error: {
+            style: { background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' },
+            iconTheme: { primary: '#ef4444', secondary: '#fef2f2' },
+            duration: 5000,
+          },
+        }}
+      />
+      <AppRoutes />
     </Router>
   );
 }

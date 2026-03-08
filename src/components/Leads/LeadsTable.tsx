@@ -8,6 +8,7 @@ interface LeadsTableProps {
   onEdit: (lead: Lead) => void;
   onDelete: (lead: Lead) => void;
   onJeffrey?: (lead: Lead) => void;
+  onVoiceAgent?: (lead: Lead) => void;
 }
 
 const getAmpelEmoji = (status: string) => {
@@ -46,7 +47,7 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete, onJeffrey }) => {
+export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete, onJeffrey, onVoiceAgent }) => {
   if (leads.length === 0) {
     return (
       <div className="empty-state">
@@ -101,6 +102,15 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete,
               <td className="date-cell">{formatDate(lead.createdAt)}</td>
               <td>
                 <div className="action-buttons">
+                  {onVoiceAgent && (
+                    <button
+                      className="btn-icon btn-voice"
+                      onClick={() => onVoiceAgent(lead)}
+                      title="Voice Agent – Anrufen"
+                    >
+                      📞
+                    </button>
+                  )}
                   {onJeffrey && (
                     <button
                       className="btn-icon btn-jeffrey"

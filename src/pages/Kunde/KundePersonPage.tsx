@@ -2,7 +2,30 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 import './KundeForm.css';
+
+// ── Validation helpers ──
+const validators = {
+  email: (v: string) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : 'Ungültige E-Mail-Adresse',
+  plz: (v: string) => !v || /^\d{4,5}$/.test(v) ? '' : 'PLZ muss 4-5 Ziffern haben',
+  svNummer: (v: string) => !v || /^\d{4,10}$/.test(v) ? '' : 'Ungültige SV-Nummer',
+  phone: (v: string) => !v || /^[\d\s+\-/()]{6,20}$/.test(v) ? '' : 'Ungültige Telefonnummer',
+  required: (v: string) => v?.trim() ? '' : 'Pflichtfeld',
+};
+
+type ValidationRule = { validator: keyof typeof validators; message?: string };
+
+const FIELD_RULES: Record<string, ValidationRule[]> = {
+  vorname: [{ validator: 'required' }],
+  nachname: [{ validator: 'required' }],
+  email: [{ validator: 'email' }],
+  plz: [{ validator: 'plz' }],
+  svNummer: [{ validator: 'svNummer' }],
+  mobilnummer: [{ validator: 'phone' }],
+  telefon: [{ validator: 'phone' }],
+  arbeitgeberPlz: [{ validator: 'plz' }],
+};
 
 export const KundePersonPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -11,6 +34,8 @@ export const KundePersonPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => { if (leadId) load(); }, [leadId]);
 
@@ -22,43 +47,102 @@ export const KundePersonPage: React.FC = () => {
     finally { setLoading(false); }
   };
 
+  const validateField = (field: string, value: any): string => {
+    const rules = FIELD_RULES[field];
+    if (!rules) return '';
+    for (const rule of rules) {
+      const error = validators[rule.validator](String(value || ''));
+      if (error) return rule.message || error;
+    }
+    return '';
+  };
+
+  const validateAll = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    const allTouched: Record<string, boolean> = {};
+    for (const field of Object.keys(FIELD_RULES)) {
+      const error = validateField(field, data[field]);
+      if (error) newErrors[field] = error;
+      allTouched[field] = true;
+    }
+    setErrors(newErrors);
+    setTouched(allTouched);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const save = async () => {
+    if (!validateAll()) {
+      toast.error('Bitte korrigiere die markierten Felder');
+      return;
+    }
     setSaving(true);
     try {
       const { id, leadId: _, createdAt, updatedAt, ...fields } = data;
       await api.put(`/kunde/${leadId}/person`, fields);
       setSaved(true);
+      toast.success('Personendaten gespeichert');
       setTimeout(() => setSaved(false), 2000);
-    } catch (err) { console.error(err); }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Speichern');
+      console.error(err);
+    }
     finally { setSaving(false); }
   };
 
   const set = (field: string, value: any) => {
     setData((prev: any) => ({ ...prev, [field]: value }));
+    // Validate on change if field was touched
+    if (touched[field]) {
+      const error = validateField(field, value);
+      setErrors(prev => ({ ...prev, [field]: error }));
+    }
   };
 
-  const Field = ({ label, field, type = 'text', placeholder = '', half = false }: any) => (
-    <div className={`kf-field ${half ? 'kf-half' : ''}`}>
-      <label className="kf-label">{label}</label>
-      {type === 'textarea' ? (
-        <textarea className="kf-input kf-textarea" value={data[field] || ''} onChange={e => set(field, e.target.value)} placeholder={placeholder} />
-      ) : type === 'select' ? (
-        <select className="kf-input" value={data[field] || ''} onChange={e => set(field, e.target.value)}>
-          {placeholder && <option value="">{placeholder}</option>}
-          {(type === 'select' ? [] : []).map((o: string) => <option key={o} value={o}>{o}</option>)}
-        </select>
-      ) : type === 'boolean' ? (
-        <div className="kf-toggle">
-          <button type="button" className={`kf-toggle-btn ${data[field] === true ? 'active' : ''}`} onClick={() => set(field, true)}>Ja</button>
-          <button type="button" className={`kf-toggle-btn ${data[field] === false ? 'active' : ''}`} onClick={() => set(field, false)}>Nein</button>
-        </div>
-      ) : (
-        <input className="kf-input" type={type} value={data[field] ?? ''} onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)} placeholder={placeholder} />
-      )}
-    </div>
-  );
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const error = validateField(field, data[field]);
+    setErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  const Field = ({ label, field, type = 'text', placeholder = '', half = false, required: isRequired = false }: any) => {
+    const hasError = touched[field] && errors[field];
+    return (
+      <div className={`kf-field ${half ? 'kf-half' : ''}`}>
+        <label className="kf-label">
+          {label}
+          {isRequired && <span style={{ color: '#ef4444', marginLeft: 2 }}>*</span>}
+        </label>
+        {type === 'textarea' ? (
+          <textarea
+            className={`kf-input kf-textarea ${hasError ? 'kf-input-error' : ''}`}
+            value={data[field] || ''}
+            onChange={e => set(field, e.target.value)}
+            onBlur={() => handleBlur(field)}
+            placeholder={placeholder}
+          />
+        ) : type === 'boolean' ? (
+          <div className="kf-toggle">
+            <button type="button" className={`kf-toggle-btn ${data[field] === true ? 'active' : ''}`} onClick={() => set(field, true)}>Ja</button>
+            <button type="button" className={`kf-toggle-btn ${data[field] === false ? 'active' : ''}`} onClick={() => set(field, false)}>Nein</button>
+          </div>
+        ) : (
+          <input
+            className={`kf-input ${hasError ? 'kf-input-error' : ''}`}
+            type={type}
+            value={data[field] ?? ''}
+            onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
+            onBlur={() => handleBlur(field)}
+            placeholder={placeholder}
+          />
+        )}
+        {hasError && <div className="kf-error">{errors[field]}</div>}
+      </div>
+    );
+  };
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
+
+  const errorCount = Object.values(errors).filter(Boolean).length;
 
   return (
     <div className="kf-page">
@@ -69,6 +153,13 @@ export const KundePersonPage: React.FC = () => {
           {saving ? '⏳ Speichern...' : saved ? '✅ Gespeichert' : '💾 Speichern'}
         </button>
       </div>
+
+      {errorCount > 0 && (
+        <div className="kf-validation-summary">
+          <span className="kf-validation-summary-icon">⚠️</span>
+          {errorCount} {errorCount === 1 ? 'Feld hat' : 'Felder haben'} Validierungsfehler
+        </div>
+      )}
 
       {/* Finanzierungsmappe */}
       <div className="kf-section">
@@ -87,8 +178,8 @@ export const KundePersonPage: React.FC = () => {
           <Field label="Titel" field="titel" half placeholder="z.B. Ing., Dr." />
         </div>
         <div className="kf-row">
-          <Field label="Vorname" field="vorname" half />
-          <Field label="Nachname" field="nachname" half />
+          <Field label="Vorname" field="vorname" half required />
+          <Field label="Nachname" field="nachname" half required />
         </div>
       </div>
 

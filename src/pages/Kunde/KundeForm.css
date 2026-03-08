@@ -223,6 +223,45 @@
   color: #dc2626;
 }
 
+/* ── Validation ── */
+.kf-input.kf-input-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.kf-input.kf-input-error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.kf-error {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kf-validation-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #991b1b;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.kf-validation-summary-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .kf-page {

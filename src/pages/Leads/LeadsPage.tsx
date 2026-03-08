@@ -6,6 +6,8 @@ import { CreateLeadModal } from '@/components/Leads/CreateLeadModal';
 import { EditLeadModal } from '@/components/Leads/EditLeadModal';
 import { JeffreyModal } from '@/components/Leads/JeffreyModal';
 import { Lead, CreateLeadDto, UpdateLeadDto } from '@/types';
+import api from '@/services/api';
+import toast from 'react-hot-toast';
 import './LeadsPage.css';
 
 export const LeadsPage: React.FC = () => {
@@ -19,6 +21,7 @@ export const LeadsPage: React.FC = () => {
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [leadForJeffrey, setLeadForJeffrey] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [callingLeadId, setCallingLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -57,6 +60,27 @@ export const LeadsPage: React.FC = () => {
   const handleJeffrey = (lead: Lead) => {
     setLeadForJeffrey(lead);
     setIsJeffreyModalOpen(true);
+  };
+
+  const handleVoiceAgent = async (lead: Lead) => {
+    if (!lead.phone) {
+      toast.error('Keine Telefonnummer vorhanden');
+      return;
+    }
+    if (callingLeadId) return; // Already calling
+    setCallingLeadId(lead.id);
+    try {
+      await api.post('/voice-agent/call', {
+        leadId: lead.id,
+        phoneNumber: lead.phone,
+        leadName: `${lead.firstName} ${lead.lastName}`,
+      });
+      toast.success(`Voice Agent ruft ${lead.firstName} ${lead.lastName} an...`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Anruf fehlgeschlagen');
+    } finally {
+      setCallingLeadId(null);
+    }
   };
 
   // Filter leads based on search
@@ -133,6 +157,7 @@ export const LeadsPage: React.FC = () => {
           onEdit={handleEditLead}
           onDelete={handleDeleteClick}
           onJeffrey={handleJeffrey}
+          onVoiceAgent={handleVoiceAgent}
         />
       )}
 

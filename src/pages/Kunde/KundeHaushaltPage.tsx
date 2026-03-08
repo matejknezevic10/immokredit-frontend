@@ -2,7 +2,36 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 import './KundeForm.css';
+
+// ── Validation helpers ──
+const validatePositiveNumber = (v: any): string => {
+  if (v === null || v === undefined || v === '') return '';
+  const num = Number(v);
+  if (isNaN(num)) return 'Bitte eine Zahl eingeben';
+  if (num < 0) return 'Wert darf nicht negativ sein';
+  return '';
+};
+
+const FIELD_RULES: Record<string, (v: any) => string> = {
+  nettoverdienst: validatePositiveNumber,
+  sonstigeEinkuenfte: validatePositiveNumber,
+  betriebskostenMiete: validatePositiveNumber,
+  energiekosten: validatePositiveNumber,
+  telefonInternet: validatePositiveNumber,
+  tvGebuehren: validatePositiveNumber,
+  transportkosten: validatePositiveNumber,
+  versicherungen: validatePositiveNumber,
+  lebenshaltungskostenKreditbeteiligte: validatePositiveNumber,
+  lebenshaltungskostenKinder: validatePositiveNumber,
+  gesonderteAusgabenKinder: validatePositiveNumber,
+  alimente: validatePositiveNumber,
+  summeEinnahmen: validatePositiveNumber,
+  summeAusgaben: validatePositiveNumber,
+  bestandskrediteRate: validatePositiveNumber,
+  zumutbareKreditrate: validatePositiveNumber,
+};
 
 export const KundeHaushaltPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -11,6 +40,8 @@ export const KundeHaushaltPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => { if (leadId) load(); }, [leadId]);
 
@@ -20,33 +51,91 @@ export const KundeHaushaltPage: React.FC = () => {
     finally { setLoading(false); }
   };
 
+  const validateField = (field: string, value: any): string => {
+    const rule = FIELD_RULES[field];
+    return rule ? rule(value) : '';
+  };
+
+  const validateAll = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    const allTouched: Record<string, boolean> = {};
+    for (const field of Object.keys(FIELD_RULES)) {
+      const error = validateField(field, data[field]);
+      if (error) newErrors[field] = error;
+      allTouched[field] = true;
+    }
+    setErrors(newErrors);
+    setTouched(allTouched);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const save = async () => {
+    if (!validateAll()) {
+      toast.error('Bitte korrigiere die markierten Felder');
+      return;
+    }
     setSaving(true);
     try {
       const { id, leadId: _, createdAt, updatedAt, ...fields } = data;
       await api.put(`/kunde/${leadId}/haushalt`, fields);
-      setSaved(true); setTimeout(() => setSaved(false), 2000);
-    } catch (err) { console.error(err); }
+      setSaved(true);
+      toast.success('Haushaltsdaten gespeichert');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Speichern');
+      console.error(err);
+    }
     finally { setSaving(false); }
   };
 
-  const set = (field: string, value: any) => setData((p: any) => ({ ...p, [field]: value }));
+  const set = (field: string, value: any) => {
+    setData((p: any) => ({ ...p, [field]: value }));
+    if (touched[field]) {
+      const error = validateField(field, value);
+      setErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
 
-  const Field = ({ label, field, type = 'text', placeholder = '', unit = '', half = false }: any) => (
-    <div className={`kf-field ${half ? 'kf-half' : ''}`}>
-      <label className="kf-label">{label}</label>
-      <div className={unit ? 'kf-input-unit' : ''}>
-        {type === 'textarea' ? (
-          <textarea className="kf-input kf-textarea" value={data[field] || ''} onChange={e => set(field, e.target.value)} placeholder={placeholder} />
-        ) : (
-          <input className="kf-input" type={type} value={data[field] ?? ''} onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)} placeholder={placeholder} />
-        )}
-        {unit && <span className="kf-unit">{unit}</span>}
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const error = validateField(field, data[field]);
+    setErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  const Field = ({ label, field, type = 'text', placeholder = '', unit = '', half = false }: any) => {
+    const hasError = touched[field] && errors[field];
+    return (
+      <div className={`kf-field ${half ? 'kf-half' : ''}`}>
+        <label className="kf-label">{label}</label>
+        <div className={unit ? 'kf-input-unit' : ''}>
+          {type === 'textarea' ? (
+            <textarea
+              className={`kf-input kf-textarea ${hasError ? 'kf-input-error' : ''}`}
+              value={data[field] || ''}
+              onChange={e => set(field, e.target.value)}
+              onBlur={() => handleBlur(field)}
+              placeholder={placeholder}
+            />
+          ) : (
+            <input
+              className={`kf-input ${hasError ? 'kf-input-error' : ''}`}
+              type={type}
+              value={data[field] ?? ''}
+              onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
+              onBlur={() => handleBlur(field)}
+              placeholder={placeholder}
+            />
+          )}
+          {unit && <span className="kf-unit">{unit}</span>}
+        </div>
+        {hasError && <div className="kf-error">{errors[field]}</div>}
       </div>
-    </div>
-  );
+    );
+  };
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
+
+  const errorCount = Object.values(errors).filter(Boolean).length;
 
   return (
     <div className="kf-page">
@@ -58,11 +147,17 @@ export const KundeHaushaltPage: React.FC = () => {
         </button>
       </div>
 
+      {errorCount > 0 && (
+        <div className="kf-validation-summary">
+          <span className="kf-validation-summary-icon">⚠️</span>
+          {errorCount} {errorCount === 1 ? 'Feld hat' : 'Felder haben'} Validierungsfehler
+        </div>
+      )}
+
       {/* Einkommen */}
       <div className="kf-section">
         <h3 className="kf-section-title">Einkommen</h3>
         <p className="kf-hint">Für mehrere Personen nutze das JSON-Feld oder erweitere den Haushalt.</p>
-        {/* Simple version — single person for now */}
         <Field label="Nettoverdienst p.M." field="nettoverdienst" type="number" unit="€" />
         <Field label="Sonstige Einkünfte p.M." field="sonstigeEinkuenfte" type="number" unit="€" />
       </div>

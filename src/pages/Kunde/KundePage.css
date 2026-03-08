@@ -559,3 +559,307 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Kennzahlen Grid ── */
+.kennzahlen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 900px;
+  margin-bottom: 32px;
+}
+
+.kennzahl-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.kennzahl-card-wide {
+  grid-column: 1 / -1;
+}
+
+.kennzahl-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kennzahl-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.kennzahl-sublabel {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.kennzahl-value-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.kennzahl-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums;
+}
+
+.kennzahl-value-large {
+  font-size: 32px;
+}
+
+.kennzahl-badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.kennzahl-details {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.kennzahl-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.kennzahl-detail-row span:first-child {
+  color: #64748b;
+}
+
+.kennzahl-detail-row span:last-child {
+  color: #1e293b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scale bar */
+.kennzahl-scale {
+  margin-top: 14px;
+}
+
+.kennzahl-scale-bar {
+  height: 6px;
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  background: #f1f5f9;
+}
+
+.kennzahl-scale-zone {
+  height: 100%;
+}
+
+.kennzahl-scale-zone.green {
+  background: #10b981;
+}
+
+.kennzahl-scale-zone.yellow {
+  background: #f59e0b;
+}
+
+.kennzahl-scale-zone.red {
+  background: #ef4444;
+}
+
+.kennzahl-scale-marker {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 12px;
+  background: #1e293b;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.kennzahl-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .kennzahlen-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Email Tracking Section ── */
+.email-tracking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 900px;
+  margin-bottom: 32px;
+}
+
+.email-tracking-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: border-color 0.2s;
+}
+
+.email-tracking-item.opened {
+  border-color: #a7f3d0;
+  background: #f0fdf4;
+}
+
+.email-tracking-item.failed {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.email-tracking-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.email-tracking-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.email-tracking-subject {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.email-tracking-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.email-tracking-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.email-badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.email-badge.opened {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.email-badge.sent {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.email-badge.failed {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.email-opened-time {
+  font-size: 11px;
+  color: #10b981;
+}
+
+/* ── Signature Status Card ── */
+.signature-status-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  max-width: 900px;
+}
+
+.signature-status-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.signature-status-card strong {
+  color: #065f46;
+  font-size: 14px;
+  display: block;
+}
+
+.signature-status-detail {
+  font-size: 12px;
+  color: #10b981;
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── Secure Link Section ── */
+.secure-link-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  max-width: 900px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.secure-link-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+}
+
+.secure-link-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.secure-link-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.secure-link-desc {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #64748b;
+}

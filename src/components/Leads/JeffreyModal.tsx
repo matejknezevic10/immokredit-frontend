@@ -1,6 +1,7 @@
 // src/components/Leads/JeffreyModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Lead } from '@/types';
+import api from '@/services/api';
 import './JeffreyModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -35,6 +36,8 @@ export const JeffreyModal: React.FC<JeffreyModalProps> = ({ isOpen, lead, onClos
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<'subject' | 'body' | 'all' | null>(null);
   const [activeTab, setActiveTab] = useState<'check' | 'email'>('check');
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const [checklist, setChecklist] = useState<DocItem[]>([]);
   const [emailSubject, setEmailSubject] = useState('');
@@ -142,6 +145,47 @@ export const JeffreyModal: React.FC<JeffreyModalProps> = ({ isOpen, lead, onClos
     setEmailSubject(subject);
     setEmailBody(body);
     setActiveTab('email');
+  };
+
+  const handleSendEmail = async () => {
+    if (!lead) return;
+    setSending(true);
+    setSendResult(null);
+    try {
+      // Generate HTML version from plain text body
+      const bodyHtml = generateHtmlFromBody(emailBody);
+
+      await api.post('/email/send', {
+        leadId: lead.id,
+        to: emailTo,
+        subject: emailSubject,
+        bodyHtml,
+        emailType: 'reminder',
+      });
+      setSendResult({ success: true, message: `Email an ${emailTo} gesendet` });
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || 'Versand fehlgeschlagen';
+      setSendResult({ success: false, message: errMsg });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const generateHtmlFromBody = (body: string): string => {
+    // Convert plain text email to styled HTML
+    const lines = body.split('\n');
+    let html = '<div style="font-family: Arial, sans-serif; font-size: 15px; color: #333; line-height: 1.6;">';
+    for (const line of lines) {
+      if (line.trim() === '') {
+        html += '<br/>';
+      } else if (line.startsWith('  ')) {
+        html += `<li style="margin-left: 16px;">${line.trim().replace(/^[•\-]\s*/, '')}</li>`;
+      } else {
+        html += `<p style="margin: 4px 0;">${line}</p>`;
+      }
+    }
+    html += '</div>';
+    return html;
   };
 
   const handleCopy = async (text: string, type: 'subject' | 'body' | 'all') => {
@@ -311,12 +355,25 @@ export const JeffreyModal: React.FC<JeffreyModalProps> = ({ isOpen, lead, onClos
                     />
                   </div>
 
+                  {sendResult && (
+                    <div className={`jeffrey-send-result ${sendResult.success ? 'success' : 'error'}`}>
+                      {sendResult.success ? '✅' : '❌'} {sendResult.message}
+                    </div>
+                  )}
+
                   <div className="jeffrey-email-actions">
                     <button className={`btn btn-secondary ${copied === 'all' ? 'btn-copied' : ''}`} onClick={handleCopyAll}>
                       {copied === 'all' ? '✓ Alles kopiert!' : '📋 Alles kopieren'}
                     </button>
-                    <button className="btn btn-primary" onClick={handleOpenMailClient}>
+                    <button className="btn btn-secondary" onClick={handleOpenMailClient}>
                       ✉️ In Mail-App öffnen
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSendEmail}
+                      disabled={sending || sendResult?.success === true}
+                    >
+                      {sending ? '⏳ Sende...' : sendResult?.success ? '✓ Gesendet' : '📨 Direkt senden'}
                     </button>
                   </div>
                 </div>
