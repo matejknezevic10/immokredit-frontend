@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/useAuthStore';
@@ -11,6 +11,7 @@ import { LoginPage } from './pages/Login/LoginPage';
 import { JeffreyChat } from './components/Chat/JeffreyChat';
 import DocumentsPage from './pages/Documents/DocumentsPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
+import { MailsPage } from './pages/Mails/MailsPage';
 import {
   KundePage,
   KundeDetailPage,
@@ -83,7 +84,7 @@ function AppRoutes() {
           <Route path="/kunde/:leadId/finanzplan" element={<KundeFinanzplanPage />} />
           <Route path="/kunde/:leadId/objekt" element={<KundeObjektPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/mails" element={<ComingSoon title="Mails" />} />
+          <Route path="/mails" element={<MailsPage />} />
         </Routes>
       </main>
       <JeffreyChat />
@@ -119,15 +120,5 @@ function App() {
     </Router>
   );
 }
-
-const ComingSoon: React.FC<{ title: string }> = ({ title }) => {
-  return (
-    <div className="coming-soon">
-      <div className="coming-soon-icon">🚧</div>
-      <h1 className="coming-soon-title">{title}</h1>
-      <p className="coming-soon-text">Diese Seite wird gerade entwickelt...</p>
-    </div>
-  );
-};
 
 export default App;

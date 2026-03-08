@@ -154,7 +154,7 @@ export const PipelinePage: React.FC = () => {
   };
 
   const handleDealClick = (deal: PipedriveDeal) => {
-    window.open(`https://rolandpotlog.pipedrive.com/deal/${deal.pipedriveDealId}`, '_blank');
+    window.open(`${import.meta.env.VITE_PIPEDRIVE_URL || 'https://immokredit.pipedrive.com'}/deal/${deal.pipedriveDealId}`, '_blank');
   };
 
   // Stats for current filter
@@ -201,7 +201,7 @@ export const PipelinePage: React.FC = () => {
           </p>
         </div>
         <div className="header-actions">
-          <a href="https://rolandpotlog.pipedrive.com/pipeline" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+          <a href={`${import.meta.env.VITE_PIPEDRIVE_URL || 'https://immokredit.pipedrive.com'}/pipeline`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
             🔗 Pipedrive
           </a>
           <button className="btn btn-secondary" onClick={loadData} disabled={isLoading}>

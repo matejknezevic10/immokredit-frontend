@@ -309,6 +309,107 @@
   }
 
   /* ============================================================
+     SETTINGS PAGE
+     ============================================================ */
+  .settings-page {
+    padding: 16px !important;
+  }
+
+  .settings-title {
+    font-size: 22px !important;
+  }
+
+  .settings-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .settings-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .settings-tab {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .settings-section {
+    padding: 16px !important;
+  }
+
+  .settings-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .team-member-card {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  /* ============================================================
+     MAILS PAGE
+     ============================================================ */
+  .mails-page {
+    padding: 16px !important;
+  }
+
+  .mails-title {
+    font-size: 22px !important;
+  }
+
+  .mails-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .mails-stat-card {
+    padding: 14px !important;
+  }
+
+  .mails-stat-value {
+    font-size: 22px !important;
+  }
+
+  .mails-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .mails-search-input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .mails-divider {
+    display: none !important;
+  }
+
+  .mails-filter-chip {
+    text-align: center !important;
+  }
+
+  .mail-item {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .mail-content {
+    min-width: calc(100% - 60px) !important;
+  }
+
+  .mail-right {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 4px !important;
+    border-top: 1px solid var(--gray-100) !important;
+  }
+
+  /* ============================================================
      COMING SOON PAGES
      ============================================================ */
   .coming-soon {

@@ -105,7 +105,7 @@ export const Dashboard: React.FC = () => {
 
   const handleDealClick = (deal: Deal) => {
     if (deal.pipedriveDealId) {
-      window.open(`https://rolandpotlog.pipedrive.com/deal/${deal.pipedriveDealId}`, '_blank');
+      window.open(`${import.meta.env.VITE_PIPEDRIVE_URL || 'https://immokredit.pipedrive.com'}/deal/${deal.pipedriveDealId}`, '_blank');
     }
   };
 
