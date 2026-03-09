@@ -454,8 +454,8 @@ export const KundeDetailPage: React.FC = () => {
         </>
       )}
 
-      {/* Digital Signature Section — only show at UNTERLAGEN_VOLLSTAENDIG */}
-      {dealStage === 'UNTERLAGEN_VOLLSTAENDIG' && !signatureStatus.signed && (
+      {/* Digital Signature Section — show from UNTERLAGEN_VOLLSTAENDIG onwards */}
+      {dealStage && ['UNTERLAGEN_VOLLSTAENDIG', 'BANK_ANFRAGE', 'WARTEN_AUF_ZUSAGE', 'ZUSAGE_ERHALTEN', 'ABGESCHLOSSEN'].includes(dealStage) && !signatureStatus.signed && (
         <SignaturePad
           leadId={leadId!}
           signerName={`${kunde.firstName} ${kunde.lastName}`}

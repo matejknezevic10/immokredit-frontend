@@ -386,6 +386,44 @@
   cursor: pointer;
 }
 
+/* Deal Action Buttons */
+.deal-card-actions {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.deal-action-btn {
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.deal-action-kunde:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.deal-action-signature:hover {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
+
+.deal-action-secure:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
 .deal-card-footer {
   display: flex;
   justify-content: space-between;

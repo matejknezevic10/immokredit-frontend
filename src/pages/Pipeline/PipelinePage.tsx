@@ -1,8 +1,10 @@
 // src/pages/Pipeline/PipelinePage.tsx
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DealStage } from '@/types';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 import './PipelinePage.css';
 
 interface TeamMember {
@@ -26,6 +28,7 @@ interface PipedriveDeal {
   assignee: { id: number; name: string; fullName: string } | null;
   addTime: string;
   updateTime: string;
+  leadId: string | null;
   lead: any;
 }
 
@@ -54,6 +57,7 @@ const AVATAR_COLORS: Record<string, string> = {
 
 export const PipelinePage: React.FC = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [deals, setDeals] = useState<PipedriveDeal[]>([]);
   const [stageConfigs, setStageConfigs] = useState<StageConfig[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
@@ -155,6 +159,16 @@ export const PipelinePage: React.FC = () => {
 
   const handleDealClick = (deal: PipedriveDeal) => {
     window.open(`${import.meta.env.VITE_PIPEDRIVE_URL || 'https://immokredit.pipedrive.com'}/deal/${deal.pipedriveDealId}`, '_blank');
+  };
+
+  const handleSendSecureLink = async (deal: PipedriveDeal) => {
+    if (!deal.leadId) return;
+    try {
+      await api.post('/secure-link/create', { leadId: deal.leadId });
+      toast.success('Verschlüsselter Link + Passwort gesendet');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Senden');
+    }
   };
 
   // Stats for current filter
@@ -305,6 +319,37 @@ export const PipelinePage: React.FC = () => {
                         {deal.personName && (
                           <div className="deal-card-person" onClick={() => handleDealClick(deal)}>
                             👤 {deal.personName}
+                          </div>
+                        )}
+
+                        {/* Action buttons for specific stages */}
+                        {deal.leadId && (
+                          <div className="deal-card-actions">
+                            <button
+                              className="deal-action-btn deal-action-kunde"
+                              onClick={(e) => { e.stopPropagation(); navigate(`/kunde/${deal.leadId}`); }}
+                              title="Kunde öffnen"
+                            >
+                              📋
+                            </button>
+                            {config.title.toLowerCase().includes('abschluss') && (
+                              <>
+                                <button
+                                  className="deal-action-btn deal-action-signature"
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/kunde/${deal.leadId}`); }}
+                                  title="Digitale Unterschrift"
+                                >
+                                  ✍️
+                                </button>
+                                <button
+                                  className="deal-action-btn deal-action-secure"
+                                  onClick={(e) => { e.stopPropagation(); handleSendSecureLink(deal); }}
+                                  title="Verschlüsselten Link senden"
+                                >
+                                  🔒
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
 
