@@ -393,23 +393,25 @@ export const Dashboard: React.FC = () => {
                   className="lead-preview-item"
                   onClick={() => navigate('/leads')}
                 >
-                  <div className="lead-preview-left">
-                    <div className="lead-preview-avatar">
-                      {lead.firstName[0]}{lead.lastName[0]}
-                    </div>
-                    <div className="lead-preview-info">
+                  <div className="lead-preview-avatar">
+                    {lead.firstName[0]}{lead.lastName[0]}
+                  </div>
+                  <div className="lead-preview-body">
+                    <div className="lead-preview-top">
                       <span className="lead-preview-name">
                         {lead.firstName} {lead.lastName}
                       </span>
-                      <span className="lead-preview-email">{lead.email}</span>
+                      <span className="lead-preview-temp">
+                        {getTemperaturEmoji(lead.temperatur)}
+                      </span>
                     </div>
-                  </div>
-                  <div className="lead-preview-right">
-                    <span className="lead-source-badge">{lead.source}</span>
-                    <span className="lead-preview-temp">
-                      {getTemperaturEmoji(lead.temperatur)}
-                    </span>
-                    <span className="lead-preview-time">{timeAgo(lead.createdAt)}</span>
+                    <div className="lead-preview-bottom">
+                      <span className="lead-preview-email">{lead.email}</span>
+                      <span className="lead-preview-dot">·</span>
+                      <span className="lead-source-badge">{lead.source}</span>
+                      <span className="lead-preview-dot">·</span>
+                      <span className="lead-preview-time">{timeAgo(lead.createdAt)}</span>
+                    </div>
                   </div>
                 </div>
               ))}
