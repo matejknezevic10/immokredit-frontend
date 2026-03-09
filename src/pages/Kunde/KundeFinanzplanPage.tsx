@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import { FormField } from '@/components/FormField';
 import './KundeForm.css';
 
 export const KundeFinanzplanPage: React.FC = () => {
@@ -32,24 +33,7 @@ export const KundeFinanzplanPage: React.FC = () => {
 
   const set = (field: string, value: any) => setData((p: any) => ({ ...p, [field]: value }));
 
-  const Field = ({ label, field, type = 'text', placeholder = '', unit = '', half = false }: any) => (
-    <div className={`kf-field ${half ? 'kf-half' : ''}`}>
-      <label className="kf-label">{label}</label>
-      <div className={unit ? 'kf-input-unit' : ''}>
-        {type === 'textarea' ? (
-          <textarea className="kf-input kf-textarea" value={data[field] || ''} onChange={e => set(field, e.target.value)} placeholder={placeholder} />
-        ) : type === 'boolean' ? (
-          <div className="kf-toggle">
-            <button type="button" className={`kf-toggle-btn ${data[field] === true ? 'active' : ''}`} onClick={() => set(field, true)}>Ja</button>
-            <button type="button" className={`kf-toggle-btn ${data[field] === false ? 'active' : ''}`} onClick={() => set(field, false)}>Nein</button>
-          </div>
-        ) : (
-          <input className="kf-input" type={type} value={data[field] ?? ''} onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)} placeholder={placeholder} />
-        )}
-        {unit && <span className="kf-unit">{unit}</span>}
-      </div>
-    </div>
-  );
+  const fp = (field: string) => ({ value: data[field], onChange: set });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 
@@ -67,8 +51,8 @@ export const KundeFinanzplanPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Projektrahmen</h3>
         <div className="kf-row">
-          <Field label="Finanzierungszweck" field="finanzierungszweck" half placeholder="Kauf, Neubau..." />
-          <Field label="Objekt" field="objektTyp" half placeholder="Einfamilienhaus, Wohnung..." />
+          <FormField label="Finanzierungszweck" field="finanzierungszweck" half placeholder="Kauf, Neubau..." {...fp('finanzierungszweck')} />
+          <FormField label="Objekt" field="objektTyp" half placeholder="Einfamilienhaus, Wohnung..." {...fp('objektTyp')} />
         </div>
       </div>
 
@@ -76,12 +60,12 @@ export const KundeFinanzplanPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Projektkosten 1</h3>
         <div className="kf-row">
-          <Field label="Kaufpreis" field="kaufpreis" type="number" unit="€" half />
-          <Field label="Grundpreis" field="grundpreis" type="number" unit="€" half />
+          <FormField label="Kaufpreis" field="kaufpreis" type="number" unit="€" half {...fp('kaufpreis')} />
+          <FormField label="Grundpreis" field="grundpreis" type="number" unit="€" half {...fp('grundpreis')} />
         </div>
         <div className="kf-row">
-          <Field label="Aufschließungskosten" field="aufschliessungskosten" type="number" unit="€" half />
-          <Field label="Baukosten / Küche" field="baukostenKueche" type="number" unit="€" half />
+          <FormField label="Aufschließungskosten" field="aufschliessungskosten" type="number" unit="€" half {...fp('aufschliessungskosten')} />
+          <FormField label="Baukosten / Küche" field="baukostenKueche" type="number" unit="€" half {...fp('baukostenKueche')} />
         </div>
       </div>
 
@@ -89,58 +73,58 @@ export const KundeFinanzplanPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Projektkosten 2</h3>
         <div className="kf-row">
-          <Field label="Renovierungskosten" field="renovierungskosten" type="number" unit="€" half />
-          <Field label="Baukostenüberschreitung" field="baukostenueberschreitung" type="number" unit="€" half />
+          <FormField label="Renovierungskosten" field="renovierungskosten" type="number" unit="€" half {...fp('renovierungskosten')} />
+          <FormField label="Baukostenüberschreitung" field="baukostenueberschreitung" type="number" unit="€" half {...fp('baukostenueberschreitung')} />
         </div>
         <div className="kf-row">
-          <Field label="Kaufnebenkosten" field="kaufnebenkostenProjekt" type="number" unit="€" half />
-          <Field label="Möbel, Sonstiges" field="moebelSonstiges" type="number" unit="€" half />
+          <FormField label="Kaufnebenkosten" field="kaufnebenkostenProjekt" type="number" unit="€" half {...fp('kaufnebenkostenProjekt')} />
+          <FormField label="Möbel, Sonstiges" field="moebelSonstiges" type="number" unit="€" half {...fp('moebelSonstiges')} />
         </div>
-        <Field label="Summe Projektkosten" field="summeProjektkosten" type="number" unit="€" />
+        <FormField label="Summe Projektkosten" field="summeProjektkosten" type="number" unit="€" {...fp('summeProjektkosten')} />
       </div>
 
       {/* Kaufnebenkosten */}
       <div className="kf-section">
         <h3 className="kf-section-title">Kaufnebenkosten</h3>
         <div className="kf-row">
-          <Field label="Errichtung Kaufvertrag/Treuhand" field="kaufvertragTreuhandProzent" type="number" unit="%" half />
-          <Field label="Maklergebühr" field="maklergebuehrProzent" type="number" unit="%" half />
+          <FormField label="Errichtung Kaufvertrag/Treuhand" field="kaufvertragTreuhandProzent" type="number" unit="%" half {...fp('kaufvertragTreuhandProzent')} />
+          <FormField label="Maklergebühr" field="maklergebuehrProzent" type="number" unit="%" half {...fp('maklergebuehrProzent')} />
         </div>
         <div className="kf-row">
-          <Field label="Grunderwerbsteuer" field="grunderwerbsteuer" type="number" unit="€" half />
-          <Field label="Eintragung Eigentumsrecht" field="eintragungEigentumsrecht" type="number" unit="€" half />
+          <FormField label="Grunderwerbsteuer" field="grunderwerbsteuer" type="number" unit="€" half {...fp('grunderwerbsteuer')} />
+          <FormField label="Eintragung Eigentumsrecht" field="eintragungEigentumsrecht" type="number" unit="€" half {...fp('eintragungEigentumsrecht')} />
         </div>
         <div className="kf-row">
-          <Field label="Errichtung Kaufvertrag/Treuhand" field="errichtungKaufvertragTreuhand" type="number" unit="€" half />
-          <Field label="Maklergebühr" field="maklergebuehr" type="number" unit="€" half />
+          <FormField label="Errichtung Kaufvertrag/Treuhand" field="errichtungKaufvertragTreuhand" type="number" unit="€" half {...fp('errichtungKaufvertragTreuhand')} />
+          <FormField label="Maklergebühr" field="maklergebuehr" type="number" unit="€" half {...fp('maklergebuehr')} />
         </div>
-        <Field label="Summe Kaufnebenkosten" field="summeKaufnebenkosten" type="number" unit="€" />
+        <FormField label="Summe Kaufnebenkosten" field="summeKaufnebenkosten" type="number" unit="€" {...fp('summeKaufnebenkosten')} />
       </div>
 
       {/* Eigenmittel 1 */}
       <div className="kf-section">
         <h3 className="kf-section-title">Eigenmittel 1</h3>
-        <Field label="Bar (Sparbuch, Wertpapiere)" field="eigenmittelBar" type="number" unit="€" />
-        <Field label="Verkaufserlöse" field="verkaufserloese" type="number" unit="€" />
-        <Field label="Vorfinanzierung" field="vorfinanzierung" type="boolean" />
+        <FormField label="Bar (Sparbuch, Wertpapiere)" field="eigenmittelBar" type="number" unit="€" {...fp('eigenmittelBar')} />
+        <FormField label="Verkaufserlöse" field="verkaufserloese" type="number" unit="€" {...fp('verkaufserloese')} />
+        <FormField label="Vorfinanzierung" field="vorfinanzierung" type="boolean" {...fp('vorfinanzierung')} />
       </div>
 
       {/* Eigenmittel 2 */}
       <div className="kf-section">
         <h3 className="kf-section-title">Eigenmittel 2</h3>
         <div className="kf-row">
-          <Field label="Ablösekapital Versicherung" field="abloesekapitalVersicherung" type="number" unit="€" half />
-          <Field label="Bausparguthaben" field="bausparguthaben" type="number" unit="€" half />
+          <FormField label="Ablösekapital Versicherung" field="abloesekapitalVersicherung" type="number" unit="€" half {...fp('abloesekapitalVersicherung')} />
+          <FormField label="Bausparguthaben" field="bausparguthaben" type="number" unit="€" half {...fp('bausparguthaben')} />
         </div>
-        <Field label="Summe Eigenmittel" field="summeEigenmittel" type="number" unit="€" />
+        <FormField label="Summe Eigenmittel" field="summeEigenmittel" type="number" unit="€" {...fp('summeEigenmittel')} />
       </div>
 
       {/* Sonstige Mittel */}
       <div className="kf-section">
         <h3 className="kf-section-title">Sonstige Mittel</h3>
         <div className="kf-row">
-          <Field label="Förderung" field="foerderung" type="number" unit="€" half />
-          <Field label="Sonstige Mittel" field="sonstigeMittel" type="number" unit="€" half />
+          <FormField label="Förderung" field="foerderung" type="number" unit="€" half {...fp('foerderung')} />
+          <FormField label="Sonstige Mittel" field="sonstigeMittel" type="number" unit="€" half {...fp('sonstigeMittel')} />
         </div>
       </div>
 
@@ -148,20 +132,20 @@ export const KundeFinanzplanPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Finanzierungsbedarf</h3>
         <div className="kf-row">
-          <Field label="Zwischenfinanzierung Netto" field="zwischenfinanzierungNetto" type="number" unit="€" half />
-          <Field label="Zwischenfinanzierung Brutto" field="zwischenfinanzierungBrutto" type="number" unit="€" half />
+          <FormField label="Zwischenfinanzierung Netto" field="zwischenfinanzierungNetto" type="number" unit="€" half {...fp('zwischenfinanzierungNetto')} />
+          <FormField label="Zwischenfinanzierung Brutto" field="zwischenfinanzierungBrutto" type="number" unit="€" half {...fp('zwischenfinanzierungBrutto')} />
         </div>
         <div className="kf-row">
-          <Field label="Langfr. Finanzierungsbedarf Netto" field="langfrFinanzierungsbedarfNetto" type="number" unit="€" half />
-          <Field label="Finanzierungsnebenkosten" field="finanzierungsnebenkosten" type="number" unit="€" half />
+          <FormField label="Langfr. Finanzierungsbedarf Netto" field="langfrFinanzierungsbedarfNetto" type="number" unit="€" half {...fp('langfrFinanzierungsbedarfNetto')} />
+          <FormField label="Finanzierungsnebenkosten" field="finanzierungsnebenkosten" type="number" unit="€" half {...fp('finanzierungsnebenkosten')} />
         </div>
-        <Field label="Langfr. Finanzierungsbedarf Brutto" field="langfrFinanzierungsbedarfBrutto" type="number" unit="€" />
+        <FormField label="Langfr. Finanzierungsbedarf Brutto" field="langfrFinanzierungsbedarfBrutto" type="number" unit="€" {...fp('langfrFinanzierungsbedarfBrutto')} />
       </div>
 
       {/* Anmerkungen */}
       <div className="kf-section">
         <h3 className="kf-section-title">Anmerkungen zum Finanzierungsplan</h3>
-        <Field label="Anmerkungen" field="anmerkungen" type="textarea" />
+        <FormField label="Anmerkungen" field="anmerkungen" type="textarea" {...fp('anmerkungen')} />
       </div>
     </div>
   );

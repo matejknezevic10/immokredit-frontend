@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
+import { FormField } from '@/components/FormField';
 import './KundeForm.css';
 
 // ── Validation helpers ──
@@ -91,7 +92,6 @@ export const KundePersonPage: React.FC = () => {
 
   const set = (field: string, value: any) => {
     setData((prev: any) => ({ ...prev, [field]: value }));
-    // Validate on change if field was touched
     if (touched[field]) {
       const error = validateField(field, value);
       setErrors(prev => ({ ...prev, [field]: error }));
@@ -104,41 +104,8 @@ export const KundePersonPage: React.FC = () => {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const Field = ({ label, field, type = 'text', placeholder = '', half = false, required: isRequired = false }: any) => {
-    const hasError = touched[field] && errors[field];
-    return (
-      <div className={`kf-field ${half ? 'kf-half' : ''}`}>
-        <label className="kf-label">
-          {label}
-          {isRequired && <span style={{ color: '#ef4444', marginLeft: 2 }}>*</span>}
-        </label>
-        {type === 'textarea' ? (
-          <textarea
-            className={`kf-input kf-textarea ${hasError ? 'kf-input-error' : ''}`}
-            value={data[field] || ''}
-            onChange={e => set(field, e.target.value)}
-            onBlur={() => handleBlur(field)}
-            placeholder={placeholder}
-          />
-        ) : type === 'boolean' ? (
-          <div className="kf-toggle">
-            <button type="button" className={`kf-toggle-btn ${data[field] === true ? 'active' : ''}`} onClick={() => set(field, true)}>Ja</button>
-            <button type="button" className={`kf-toggle-btn ${data[field] === false ? 'active' : ''}`} onClick={() => set(field, false)}>Nein</button>
-          </div>
-        ) : (
-          <input
-            className={`kf-input ${hasError ? 'kf-input-error' : ''}`}
-            type={type}
-            value={data[field] ?? ''}
-            onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
-            onBlur={() => handleBlur(field)}
-            placeholder={placeholder}
-          />
-        )}
-        {hasError && <div className="kf-error">{errors[field]}</div>}
-      </div>
-    );
-  };
+  // Shorthand to reduce boilerplate — shared props for all fields
+  const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], onChange: set, onBlur: handleBlur });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 
@@ -165,8 +132,8 @@ export const KundePersonPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Finanzierungsmappe</h3>
         <div className="kf-row">
-          <Field label="Berater" field="berater" half />
-          <Field label="Finanzierungsstandort" field="finanzierungsstandort" half />
+          <FormField label="Berater" field="berater" half {...fp('berater')} />
+          <FormField label="Finanzierungsstandort" field="finanzierungsstandort" half {...fp('finanzierungsstandort')} />
         </div>
       </div>
 
@@ -174,12 +141,12 @@ export const KundePersonPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Person</h3>
         <div className="kf-row">
-          <Field label="Anrede" field="anrede" half placeholder="Herr / Frau" />
-          <Field label="Titel" field="titel" half placeholder="z.B. Ing., Dr." />
+          <FormField label="Anrede" field="anrede" half placeholder="Herr / Frau" {...fp('anrede')} />
+          <FormField label="Titel" field="titel" half placeholder="z.B. Ing., Dr." {...fp('titel')} />
         </div>
         <div className="kf-row">
-          <Field label="Vorname" field="vorname" half required />
-          <Field label="Nachname" field="nachname" half required />
+          <FormField label="Vorname" field="vorname" half required {...fp('vorname')} />
+          <FormField label="Nachname" field="nachname" half required {...fp('nachname')} />
         </div>
       </div>
 
@@ -187,59 +154,59 @@ export const KundePersonPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Anschrift</h3>
         <div className="kf-row">
-          <Field label="Straße" field="strasse" />
-          <Field label="Hausnummer" field="hausnummer" half />
+          <FormField label="Straße" field="strasse" {...fp('strasse')} />
+          <FormField label="Hausnummer" field="hausnummer" half {...fp('hausnummer')} />
         </div>
         <div className="kf-row">
-          <Field label="Stiege" field="stiege" half />
-          <Field label="Top" field="top" half />
+          <FormField label="Stiege" field="stiege" half {...fp('stiege')} />
+          <FormField label="Top" field="top" half {...fp('top')} />
         </div>
         <div className="kf-row">
-          <Field label="Postleitzahl" field="plz" half />
-          <Field label="Ort" field="ort" half />
+          <FormField label="Postleitzahl" field="plz" half {...fp('plz')} />
+          <FormField label="Ort" field="ort" half {...fp('ort')} />
         </div>
-        <Field label="Land" field="land" placeholder="Österreich" />
+        <FormField label="Land" field="land" placeholder="Österreich" {...fp('land')} />
       </div>
 
       {/* Kontakt */}
       <div className="kf-section">
         <h3 className="kf-section-title">Kontakt</h3>
         <div className="kf-row">
-          <Field label="Mobilnummer" field="mobilnummer" half />
-          <Field label="Telefon (tagsüber)" field="telefon" half />
+          <FormField label="Mobilnummer" field="mobilnummer" half {...fp('mobilnummer')} />
+          <FormField label="Telefon (tagsüber)" field="telefon" half {...fp('telefon')} />
         </div>
-        <Field label="E-Mail" field="email" type="email" />
+        <FormField label="E-Mail" field="email" type="email" {...fp('email')} />
       </div>
 
       {/* Geburtsdaten */}
       <div className="kf-section">
         <h3 className="kf-section-title">Geburtsdaten</h3>
         <div className="kf-row">
-          <Field label="Geburtsdatum" field="geburtsdatum" type="date" half />
-          <Field label="Geburtsland" field="geburtsland" half />
+          <FormField label="Geburtsdatum" field="geburtsdatum" type="date" half {...fp('geburtsdatum')} />
+          <FormField label="Geburtsland" field="geburtsland" half {...fp('geburtsland')} />
         </div>
         <div className="kf-row">
-          <Field label="Geburtsort" field="geburtsort" half />
-          <Field label="Alter bei Laufzeitende" field="alterBeiLaufzeitende" type="number" half />
+          <FormField label="Geburtsort" field="geburtsort" half {...fp('geburtsort')} />
+          <FormField label="Alter bei Laufzeitende" field="alterBeiLaufzeitende" type="number" half {...fp('alterBeiLaufzeitende')} />
         </div>
       </div>
 
       {/* Kredit bis Pensionsantritt */}
       <div className="kf-section">
         <h3 className="kf-section-title">Kredit bis Pensionsantritt</h3>
-        <Field label="Anmerkung" field="anmerkungPensionsantritt" type="textarea" />
+        <FormField label="Anmerkung" field="anmerkungPensionsantritt" type="textarea" {...fp('anmerkungPensionsantritt')} />
       </div>
 
       {/* Staatsbürgerschaft */}
       <div className="kf-section">
         <h3 className="kf-section-title">Staatsbürgerschaft</h3>
         <div className="kf-row">
-          <Field label="Staatsbürgerschaft" field="staatsbuergerschaft" half />
-          <Field label="Weitere Staatsbürgerschaft" field="weitereStaatsbuergerschaft" half />
+          <FormField label="Staatsbürgerschaft" field="staatsbuergerschaft" half {...fp('staatsbuergerschaft')} />
+          <FormField label="Weitere Staatsbürgerschaft" field="weitereStaatsbuergerschaft" half {...fp('weitereStaatsbuergerschaft')} />
         </div>
         <div className="kf-row">
-          <Field label="SV-Nummer" field="svNummer" half />
-          <Field label="SV-Träger" field="svTraeger" half placeholder="ÖGK, SVS, BVAEB..." />
+          <FormField label="SV-Nummer" field="svNummer" half {...fp('svNummer')} />
+          <FormField label="SV-Träger" field="svTraeger" half placeholder="ÖGK, SVS, BVAEB..." {...fp('svTraeger')} />
         </div>
       </div>
 
@@ -247,28 +214,28 @@ export const KundePersonPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Wohnverhältnis</h3>
         <div className="kf-row">
-          <Field label="Wohnart" field="wohnart" half placeholder="Hauptmiete, Eigentum..." />
-          <Field label="Wohnhaft seit" field="wohnhaftSeit" type="date" half />
+          <FormField label="Wohnart" field="wohnart" half placeholder="Hauptmiete, Eigentum..." {...fp('wohnart')} />
+          <FormField label="Wohnhaft seit" field="wohnhaftSeit" type="date" half {...fp('wohnhaftSeit')} />
         </div>
-        <Field label="Steuerdomizil" field="steuerdomizil" />
+        <FormField label="Steuerdomizil" field="steuerdomizil" {...fp('steuerdomizil')} />
       </div>
 
       {/* Familienstand */}
       <div className="kf-section">
         <h3 className="kf-section-title">Familienstand</h3>
         <div className="kf-row">
-          <Field label="Familienstand" field="familienstand" half placeholder="Ledig, Verheiratet..." />
-          <Field label="Anzahl Kinder" field="anzahlKinder" type="number" half />
+          <FormField label="Familienstand" field="familienstand" half placeholder="Ledig, Verheiratet..." {...fp('familienstand')} />
+          <FormField label="Anzahl Kinder" field="anzahlKinder" type="number" half {...fp('anzahlKinder')} />
         </div>
-        <Field label="Unterhaltsberechtigte Personen" field="unterhaltsberechtigtePersonen" type="number" />
+        <FormField label="Unterhaltsberechtigte Personen" field="unterhaltsberechtigtePersonen" type="number" {...fp('unterhaltsberechtigtePersonen')} />
       </div>
 
       {/* Ausbildung und Beruf */}
       <div className="kf-section">
         <h3 className="kf-section-title">Ausbildung und Beruf</h3>
         <div className="kf-row">
-          <Field label="Höchste abgeschlossene Ausbildung" field="hoechsteAusbildung" half />
-          <Field label="Anstellungsverhältnis" field="anstellungsverhaeltnis" half />
+          <FormField label="Höchste abgeschlossene Ausbildung" field="hoechsteAusbildung" half {...fp('hoechsteAusbildung')} />
+          <FormField label="Anstellungsverhältnis" field="anstellungsverhaeltnis" half {...fp('anstellungsverhaeltnis')} />
         </div>
       </div>
 
@@ -276,52 +243,46 @@ export const KundePersonPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Aktuelle Beschäftigung</h3>
         <div className="kf-row">
-          <Field label="Beruf" field="beruf" half />
-          <Field label="Arbeitgeber" field="arbeitgeber" half />
+          <FormField label="Beruf" field="beruf" half {...fp('beruf')} />
+          <FormField label="Arbeitgeber" field="arbeitgeber" half {...fp('arbeitgeber')} />
         </div>
         <div className="kf-row">
-          <Field label="Beschäftigt seit" field="beschaeftigtSeit" type="date" half />
-          <Field label="Vorbeschäftigungsdauer (Monate)" field="vorbeschaeftigungsdauerMonate" type="number" half />
+          <FormField label="Beschäftigt seit" field="beschaeftigtSeit" type="date" half {...fp('beschaeftigtSeit')} />
+          <FormField label="Vorbeschäftigungsdauer (Monate)" field="vorbeschaeftigungsdauerMonate" type="number" half {...fp('vorbeschaeftigungsdauerMonate')} />
         </div>
       </div>
 
       {/* Anschrift Arbeitgeber */}
       <div className="kf-section">
         <h3 className="kf-section-title">Anschrift Arbeitgeber</h3>
-        <Field label="Straße" field="arbeitgeberStrasse" />
+        <FormField label="Straße" field="arbeitgeberStrasse" {...fp('arbeitgeberStrasse')} />
         <div className="kf-row">
-          <Field label="Hausnummer" field="arbeitgeberHausnummer" half />
-          <Field label="Postleitzahl" field="arbeitgeberPlz" half />
+          <FormField label="Hausnummer" field="arbeitgeberHausnummer" half {...fp('arbeitgeberHausnummer')} />
+          <FormField label="Postleitzahl" field="arbeitgeberPlz" half {...fp('arbeitgeberPlz')} />
         </div>
-        <Field label="Ort" field="arbeitgeberOrt" />
+        <FormField label="Ort" field="arbeitgeberOrt" {...fp('arbeitgeberOrt')} />
       </div>
 
       {/* KFZ */}
       <div className="kf-section">
         <h3 className="kf-section-title">KFZ</h3>
-        <div className="kf-field">
-          <label className="kf-label">Eigenes KFZ vorhanden</label>
-          <div className="kf-toggle">
-            <button type="button" className={`kf-toggle-btn ${data.eigenesKfz === true ? 'active' : ''}`} onClick={() => set('eigenesKfz', true)}>Ja</button>
-            <button type="button" className={`kf-toggle-btn ${data.eigenesKfz === false ? 'active' : ''}`} onClick={() => set('eigenesKfz', false)}>Nein</button>
-          </div>
-        </div>
+        <FormField label="Eigenes KFZ vorhanden" field="eigenesKfz" type="boolean" {...fp('eigenesKfz')} />
       </div>
 
       {/* Konto */}
       <div className="kf-section">
         <h3 className="kf-section-title">Konto</h3>
-        <Field label="Kontoverbindung" field="kontoverbindung" placeholder="AT..." />
+        <FormField label="Kontoverbindung" field="kontoverbindung" placeholder="AT..." {...fp('kontoverbindung')} />
         <div className="kf-row">
-          <Field label="Neues Konto bei Bank" field="neuesKontoBeiBank" half />
-          <Field label="Neues Konto IBAN" field="neuesKonto" half />
+          <FormField label="Neues Konto bei Bank" field="neuesKontoBeiBank" half {...fp('neuesKontoBeiBank')} />
+          <FormField label="Neues Konto IBAN" field="neuesKonto" half {...fp('neuesKonto')} />
         </div>
       </div>
 
       {/* Anmerkungen */}
       <div className="kf-section">
         <h3 className="kf-section-title">Anmerkungen</h3>
-        <Field label="Anmerkungen zu den Personendaten" field="anmerkungen" type="textarea" />
+        <FormField label="Anmerkungen zu den Personendaten" field="anmerkungen" type="textarea" {...fp('anmerkungen')} />
       </div>
     </div>
   );

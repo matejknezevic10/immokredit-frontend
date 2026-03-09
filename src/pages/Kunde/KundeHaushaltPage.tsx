@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
+import { FormField } from '@/components/FormField';
 import './KundeForm.css';
 
 // ── Validation helpers ──
@@ -102,36 +103,7 @@ export const KundeHaushaltPage: React.FC = () => {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const Field = ({ label, field, type = 'text', placeholder = '', unit = '', half = false }: any) => {
-    const hasError = touched[field] && errors[field];
-    return (
-      <div className={`kf-field ${half ? 'kf-half' : ''}`}>
-        <label className="kf-label">{label}</label>
-        <div className={unit ? 'kf-input-unit' : ''}>
-          {type === 'textarea' ? (
-            <textarea
-              className={`kf-input kf-textarea ${hasError ? 'kf-input-error' : ''}`}
-              value={data[field] || ''}
-              onChange={e => set(field, e.target.value)}
-              onBlur={() => handleBlur(field)}
-              placeholder={placeholder}
-            />
-          ) : (
-            <input
-              className={`kf-input ${hasError ? 'kf-input-error' : ''}`}
-              type={type}
-              value={data[field] ?? ''}
-              onChange={e => set(field, type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
-              onBlur={() => handleBlur(field)}
-              placeholder={placeholder}
-            />
-          )}
-          {unit && <span className="kf-unit">{unit}</span>}
-        </div>
-        {hasError && <div className="kf-error">{errors[field]}</div>}
-      </div>
-    );
-  };
+  const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], onChange: set, onBlur: handleBlur });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 
@@ -158,44 +130,44 @@ export const KundeHaushaltPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Einkommen</h3>
         <p className="kf-hint">Für mehrere Personen nutze das JSON-Feld oder erweitere den Haushalt.</p>
-        <Field label="Nettoverdienst p.M." field="nettoverdienst" type="number" unit="€" />
-        <Field label="Sonstige Einkünfte p.M." field="sonstigeEinkuenfte" type="number" unit="€" />
+        <FormField label="Nettoverdienst p.M." field="nettoverdienst" type="number" unit="€" {...fp('nettoverdienst')} />
+        <FormField label="Sonstige Einkünfte p.M." field="sonstigeEinkuenfte" type="number" unit="€" {...fp('sonstigeEinkuenfte')} />
       </div>
 
       {/* Argumentation Einkünfte */}
       <div className="kf-section">
         <h3 className="kf-section-title">Argumentation Einkünfte</h3>
-        <Field label="Argumentation (Kurzarbeit, selbständige Tätigkeit, etc.)" field="argumentationEinkuenfte" type="textarea" />
+        <FormField label="Argumentation (Kurzarbeit, selbständige Tätigkeit, etc.)" field="argumentationEinkuenfte" type="textarea" {...fp('argumentationEinkuenfte')} />
       </div>
 
       {/* Zukünftige Wohnkosten */}
       <div className="kf-section">
         <h3 className="kf-section-title">Zukünftige Wohnkosten</h3>
         <div className="kf-row">
-          <Field label="Betriebskosten/Miete" field="betriebskostenMiete" type="number" unit="€" half />
-          <Field label="Energiekosten" field="energiekosten" type="number" unit="€" half />
+          <FormField label="Betriebskosten/Miete" field="betriebskostenMiete" type="number" unit="€" half {...fp('betriebskostenMiete')} />
+          <FormField label="Energiekosten" field="energiekosten" type="number" unit="€" half {...fp('energiekosten')} />
         </div>
         <div className="kf-row">
-          <Field label="Telefon/Internet" field="telefonInternet" type="number" unit="€" half />
-          <Field label="TV/Gebühren" field="tvGebuehren" type="number" unit="€" half />
+          <FormField label="Telefon/Internet" field="telefonInternet" type="number" unit="€" half {...fp('telefonInternet')} />
+          <FormField label="TV/Gebühren" field="tvGebuehren" type="number" unit="€" half {...fp('tvGebuehren')} />
         </div>
-        <Field label="Anmerkung Wohnkosten" field="anmerkungWohnkosten" type="textarea" />
+        <FormField label="Anmerkung Wohnkosten" field="anmerkungWohnkosten" type="textarea" {...fp('anmerkungWohnkosten')} />
       </div>
 
       {/* Monatliche Verpflichtungen */}
       <div className="kf-section">
         <h3 className="kf-section-title">Monatliche Verpflichtungen</h3>
         <div className="kf-row">
-          <Field label="Transportkosten" field="transportkosten" type="number" unit="€" half />
-          <Field label="Versicherungen" field="versicherungen" type="number" unit="€" half />
+          <FormField label="Transportkosten" field="transportkosten" type="number" unit="€" half {...fp('transportkosten')} />
+          <FormField label="Versicherungen" field="versicherungen" type="number" unit="€" half {...fp('versicherungen')} />
         </div>
         <div className="kf-row">
-          <Field label="Lebenshaltungskosten Kreditbeteiligte" field="lebenshaltungskostenKreditbeteiligte" type="number" unit="€" half />
-          <Field label="Lebenshaltungskosten Kinder" field="lebenshaltungskostenKinder" type="number" unit="€" half />
+          <FormField label="Lebenshaltungskosten Kreditbeteiligte" field="lebenshaltungskostenKreditbeteiligte" type="number" unit="€" half {...fp('lebenshaltungskostenKreditbeteiligte')} />
+          <FormField label="Lebenshaltungskosten Kinder" field="lebenshaltungskostenKinder" type="number" unit="€" half {...fp('lebenshaltungskostenKinder')} />
         </div>
         <div className="kf-row">
-          <Field label="Gesonderte Ausgaben Kinder" field="gesonderteAusgabenKinder" type="number" unit="€" half />
-          <Field label="Alimente" field="alimente" type="number" unit="€" half />
+          <FormField label="Gesonderte Ausgaben Kinder" field="gesonderteAusgabenKinder" type="number" unit="€" half {...fp('gesonderteAusgabenKinder')} />
+          <FormField label="Alimente" field="alimente" type="number" unit="€" half {...fp('alimente')} />
         </div>
       </div>
 
@@ -203,12 +175,12 @@ export const KundeHaushaltPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Haushaltsrechnung</h3>
         <div className="kf-row">
-          <Field label="Summe gemeinsame Einnahmen" field="summeEinnahmen" type="number" unit="€" half />
-          <Field label="Summe der Haushaltsausgaben" field="summeAusgaben" type="number" unit="€" half />
+          <FormField label="Summe gemeinsame Einnahmen" field="summeEinnahmen" type="number" unit="€" half {...fp('summeEinnahmen')} />
+          <FormField label="Summe der Haushaltsausgaben" field="summeAusgaben" type="number" unit="€" half {...fp('summeAusgaben')} />
         </div>
         <div className="kf-row">
-          <Field label="Sicherheitsaufschlag auf Ausgaben" field="sicherheitsaufschlag" type="number" unit="€" half />
-          <Field label="Zwischensumme HHR" field="zwischensummeHhr" type="number" unit="€" half />
+          <FormField label="Sicherheitsaufschlag auf Ausgaben" field="sicherheitsaufschlag" type="number" unit="€" half {...fp('sicherheitsaufschlag')} />
+          <FormField label="Zwischensumme HHR" field="zwischensummeHhr" type="number" unit="€" half {...fp('zwischensummeHhr')} />
         </div>
       </div>
 
@@ -216,19 +188,19 @@ export const KundeHaushaltPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Zumutbare Kreditrate</h3>
         <div className="kf-row">
-          <Field label="Frei verfügbares Einkommen" field="freiVerfuegbaresEinkommen" type="number" unit="€" half />
-          <Field label="Bestandskredite" field="bestandskrediteRate" type="number" unit="€" half />
+          <FormField label="Frei verfügbares Einkommen" field="freiVerfuegbaresEinkommen" type="number" unit="€" half {...fp('freiVerfuegbaresEinkommen')} />
+          <FormField label="Bestandskredite" field="bestandskrediteRate" type="number" unit="€" half {...fp('bestandskrediteRate')} />
         </div>
         <div className="kf-row">
-          <Field label="Rate Förderung" field="rateFoerderung" type="number" unit="€" half />
-          <Field label="Zumutbare Kreditrate" field="zumutbareKreditrate" type="number" unit="€" half />
+          <FormField label="Rate Förderung" field="rateFoerderung" type="number" unit="€" half {...fp('rateFoerderung')} />
+          <FormField label="Zumutbare Kreditrate" field="zumutbareKreditrate" type="number" unit="€" half {...fp('zumutbareKreditrate')} />
         </div>
       </div>
 
       {/* Anmerkungen */}
       <div className="kf-section">
         <h3 className="kf-section-title">Anmerkungen Haushalt</h3>
-        <Field label="Anmerkungen Haushaltsangabe" field="anmerkungen" type="textarea" />
+        <FormField label="Anmerkungen Haushaltsangabe" field="anmerkungen" type="textarea" {...fp('anmerkungen')} />
       </div>
     </div>
   );
