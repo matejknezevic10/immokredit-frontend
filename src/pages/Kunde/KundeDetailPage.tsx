@@ -227,55 +227,25 @@ export const KundeDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Jeffrey OCR Section */}
-      <div className="jeffrey-section">
-        <div className="jeffrey-header">
-          <div className="jeffrey-info">
-            <span className="jeffrey-icon">🤖</span>
-            <div>
-              <h3 className="jeffrey-title">Jeffrey Dokumenten-Analyse</h3>
-              <p className="jeffrey-desc">
-                {docCount} Dokument{docCount !== 1 ? 'e' : ''} vorhanden.
-                Jeffrey analysiert alle Dokumente und befüllt die Kundenfelder automatisch.
-              </p>
+      {/* Finanzierungsdaten — sofort sichtbar */}
+      <p className="kunde-section-label">Finanzierungsdaten</p>
+      <div className="kunde-tiles">
+        {tiles.map(tile => {
+          const fieldCount = getFilledFieldCount(tile.key);
+          return (
+            <div
+              key={tile.key}
+              className={`kunde-tile ${fieldCount > 0 ? 'has-data' : ''}`}
+              onClick={() => navigate(`/kunde/${leadId}/${tile.path}`)}
+            >
+              <div className="kunde-tile-icon">{tile.icon}</div>
+              <div className="kunde-tile-label">{tile.label}</div>
+              {fieldCount > 0 && (
+                <span className="kunde-tile-count">{fieldCount} Felder</span>
+              )}
             </div>
-          </div>
-          <button
-            className={`jeffrey-btn ${analyzing ? 'analyzing' : ''}`}
-            onClick={runJeffreyOCR}
-            disabled={analyzing || docCount === 0}
-          >
-            {analyzing ? (
-              <><span className="jeffrey-spinner">⏳</span> Analysiere...</>
-            ) : (
-              <>🔍 Dokumente analysieren</>
-            )}
-          </button>
-        </div>
-
-        {/* OCR Results */}
-        {ocrResults && ocrResults.length > 0 && (
-          <div className="jeffrey-results">
-            <p className="jeffrey-results-title">✅ {ocrResults.length} Dokument{ocrResults.length !== 1 ? 'e' : ''} analysiert:</p>
-            {ocrResults.map((r, i) => (
-              <div key={i} className="jeffrey-result-item">
-                <span className="jeffrey-result-type">{r.documentType}</span>
-                <span className="jeffrey-result-file">{r.filename}</span>
-                <span className="jeffrey-result-fields">{r.fieldsExtracted} Felder erkannt</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {ocrResults && ocrResults.length === 0 && (
-          <div className="jeffrey-results">
-            <p className="jeffrey-results-empty">Keine neuen Dokumente zum Analysieren gefunden.</p>
-          </div>
-        )}
-
-        {ocrError && (
-          <div className="jeffrey-error">❌ {ocrError}</div>
-        )}
+          );
+        })}
       </div>
 
       {/* Kennzahlen Section */}
@@ -445,25 +415,54 @@ export const KundeDetailPage: React.FC = () => {
         </>
       )}
 
-      <p className="kunde-section-label">Finanzierungsdaten</p>
-
-      <div className="kunde-tiles">
-        {tiles.map(tile => {
-          const fieldCount = getFilledFieldCount(tile.key);
-          return (
-            <div
-              key={tile.key}
-              className={`kunde-tile ${fieldCount > 0 ? 'has-data' : ''}`}
-              onClick={() => navigate(`/kunde/${leadId}/${tile.path}`)}
-            >
-              <div className="kunde-tile-icon">{tile.icon}</div>
-              <div className="kunde-tile-label">{tile.label}</div>
-              {fieldCount > 0 && (
-                <span className="kunde-tile-count">{fieldCount} Felder</span>
-              )}
+      {/* Jeffrey OCR — kompakte Inline-Leiste */}
+      <div className="jeffrey-section jeffrey-compact">
+        <div className="jeffrey-header">
+          <div className="jeffrey-info">
+            <span className="jeffrey-icon">🤖</span>
+            <div>
+              <h3 className="jeffrey-title">Jeffrey Dokumenten-Analyse</h3>
+              <p className="jeffrey-desc">
+                {docCount} Dokument{docCount !== 1 ? 'e' : ''} vorhanden
+              </p>
             </div>
-          );
-        })}
+          </div>
+          <button
+            className={`jeffrey-btn ${analyzing ? 'analyzing' : ''}`}
+            onClick={runJeffreyOCR}
+            disabled={analyzing || docCount === 0}
+          >
+            {analyzing ? (
+              <><span className="jeffrey-spinner">⏳</span> Analysiere...</>
+            ) : (
+              <>🔍 Analysieren</>
+            )}
+          </button>
+        </div>
+
+        {/* OCR Results — nur wenn vorhanden */}
+        {ocrResults && ocrResults.length > 0 && (
+          <div className="jeffrey-results">
+            <p className="jeffrey-results-title">✅ {ocrResults.length} Dokument{ocrResults.length !== 1 ? 'e' : ''} analysiert:</p>
+            {ocrResults.map((r, i) => (
+              <div key={i} className="jeffrey-result-item">
+                <span className="jeffrey-result-type">{r.documentType}</span>
+                <span className="jeffrey-result-file">{r.filename}</span>
+                <span className="jeffrey-result-fields">{r.fieldsExtracted} Felder</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {ocrResults && ocrResults.length === 0 && (
+          <div className="jeffrey-results">
+            <p className="jeffrey-results-empty">Keine neuen Dokumente zum Analysieren.</p>
+          </div>
+        )}
+
+        {ocrError && (
+          <div className="jeffrey-error">❌ {ocrError}</div>
+        )}
       </div>
 
       {/* Digital Signature Section — only show at UNTERLAGEN_VOLLSTAENDIG */}
