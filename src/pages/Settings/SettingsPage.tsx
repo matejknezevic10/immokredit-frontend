@@ -59,6 +59,8 @@ export const SettingsPage: React.FC = () => {
 function ProfileTab({ user }: { user: any }) {
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
+  const [senderEmail, setSenderEmail] = useState('');
+  const [senderName, setSenderName] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Password fields
@@ -67,6 +69,14 @@ function ProfileTab({ user }: { user: any }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPw, setChangingPw] = useState(false);
 
+  // Load sender settings from API
+  useEffect(() => {
+    api.get('/auth/me').then(res => {
+      setSenderEmail(res.data.senderEmail || '');
+      setSenderName(res.data.senderName || '');
+    }).catch(() => {});
+  }, []);
+
   const handleSaveProfile = async () => {
     if (!name.trim()) {
       toast.error('Name darf nicht leer sein');
@@ -74,7 +84,11 @@ function ProfileTab({ user }: { user: any }) {
     }
     setSaving(true);
     try {
-      await api.put('/auth/profile', { name: name.trim() });
+      await api.put('/auth/profile', {
+        name: name.trim(),
+        senderEmail: senderEmail.trim() || null,
+        senderName: senderName.trim() || null,
+      });
       toast.success('Profil gespeichert');
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Fehler beim Speichern');
@@ -159,6 +173,48 @@ function ProfileTab({ user }: { user: any }) {
           disabled={saving}
         >
           {saving ? '⏳ Speichern...' : '💾 Profil speichern'}
+        </button>
+      </div>
+
+      <div className="settings-section">
+        <div className="settings-section-header">
+          <div>
+            <h3 className="settings-section-title">E-Mail Absender</h3>
+            <p className="settings-section-desc">Absender-Adresse und Name für ausgehende E-Mails</p>
+          </div>
+        </div>
+        <div className="settings-info-box">
+          <span className="settings-info-icon">ℹ️</span>
+          <span>Wenn konfiguriert, werden ausgehende E-Mails mit dieser Adresse als Absender versendet. Ohne Konfiguration wird die Standard-Adresse (info@immo-kredit.net) verwendet.</span>
+        </div>
+        <div className="settings-row">
+          <div className="settings-field">
+            <label className="settings-label">Absender E-Mail</label>
+            <input
+              className="settings-input"
+              type="email"
+              value={senderEmail}
+              onChange={e => setSenderEmail(e.target.value)}
+              placeholder="z.B. Office@tdfinance.at"
+            />
+          </div>
+          <div className="settings-field">
+            <label className="settings-label">Absender Name</label>
+            <input
+              className="settings-input"
+              type="text"
+              value={senderName}
+              onChange={e => setSenderName(e.target.value)}
+              placeholder="z.B. Daniel Tunjic - TDFinance"
+            />
+          </div>
+        </div>
+        <button
+          className="settings-btn settings-btn-primary"
+          onClick={handleSaveProfile}
+          disabled={saving}
+        >
+          {saving ? '⏳ Speichern...' : '💾 Absender speichern'}
         </button>
       </div>
 
