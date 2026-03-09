@@ -3,10 +3,14 @@
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 18px;
   transition: all 0.3s;
   position: relative;
   overflow: hidden;
+  cursor: default;
+}
+
+.stat-card-clickable {
   cursor: pointer;
 }
 
@@ -37,43 +41,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .stat-value {
-  font-size: 40px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--text);
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   letter-spacing: -1px;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-trend {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: var(--radius);
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .stat-trend.up {
