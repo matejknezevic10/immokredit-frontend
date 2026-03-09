@@ -38,6 +38,16 @@ interface DashboardActivity {
   lead: { id: string; firstName: string; lastName: string };
 }
 
+interface DealPreview {
+  pipedriveDealId: number;
+  title: string;
+  value: number;
+  stage: string;
+  personName: string | null;
+  assigneeName: string | null;
+  addTime: string;
+}
+
 interface MyDashboardData {
   userName: string;
   meineKunden: {
@@ -54,6 +64,7 @@ interface MyDashboardData {
   offeneKunden: OffenerKunde[];
   meineAktivitaeten: DashboardActivity[];
   aktivitaetenHeute: number;
+  meineDeals: DealPreview[];
 }
 
 // ── Helpers ────────────────────────────────────────────
@@ -101,6 +112,15 @@ const getTemperaturEmoji = (temp: string) => {
     default: return '🌤️';
   }
 };
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 // ── Component ──────────────────────────────────────────
 export const Dashboard: React.FC = () => {
@@ -269,6 +289,43 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── Meine Deals (Pipedrive) ── */}
+      {data.meineDeals.length > 0 && (
+        <div className="deals-container">
+          <div className="offene-kunden-header">
+            <h2 className="section-title">Meine Deals</h2>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/pipeline')}>
+              Pipeline →
+            </button>
+          </div>
+          <div className="deals-grid">
+            {data.meineDeals.map((deal) => (
+              <div
+                key={deal.pipedriveDealId}
+                className="deal-card"
+                onClick={() =>
+                  window.open(
+                    `${import.meta.env.VITE_PIPEDRIVE_URL || 'https://immokredit.pipedrive.com'}/deal/${deal.pipedriveDealId}`,
+                    '_blank'
+                  )
+                }
+              >
+                <div className="deal-card-top">
+                  <span className="deal-card-stage">{deal.stage}</span>
+                  {deal.value > 0 && (
+                    <span className="deal-card-value">{formatCurrency(deal.value)}</span>
+                  )}
+                </div>
+                <div className="deal-card-title">{deal.title}</div>
+                {deal.personName && (
+                  <div className="deal-card-person">👤 {deal.personName}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Bottom Split: Activities + Leads ── */}
       <div className="dashboard-bottom-split">
