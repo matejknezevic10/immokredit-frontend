@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
 import './KundeForm.css';
 
@@ -40,8 +41,13 @@ export const KundeObjektPage: React.FC = () => {
       const updated = [...objekte];
       updated[activeIdx] = res.data;
       setObjekte(updated);
-      setSaved(true); setTimeout(() => setSaved(false), 2000);
-    } catch (err) { console.error(err); }
+      setSaved(true);
+      toast.success('Objektdaten gespeichert');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Speichern');
+      console.error(err);
+    }
     finally { setSaving(false); }
   };
 

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
 import './KundeForm.css';
 
@@ -26,8 +27,13 @@ export const KundeFinanzplanPage: React.FC = () => {
     try {
       const { id, leadId: _, createdAt, updatedAt, ...fields } = data;
       await api.put(`/kunde/${leadId}/finanzplan`, fields);
-      setSaved(true); setTimeout(() => setSaved(false), 2000);
-    } catch (err) { console.error(err); }
+      setSaved(true);
+      toast.success('Finanzplan gespeichert');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Speichern');
+      console.error(err);
+    }
     finally { setSaving(false); }
   };
 
