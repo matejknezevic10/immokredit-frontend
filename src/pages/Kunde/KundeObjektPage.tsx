@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
+import { TagInput } from '@/components/TagInput';
 import './KundeForm.css';
 
 export const KundeObjektPage: React.FC = () => {
@@ -66,6 +67,15 @@ export const KundeObjektPage: React.FC = () => {
   };
 
   const fp = (field: string) => ({ value: data[field], onChange: set });
+
+  const updateJson = (field: string, key: string, value: any) => {
+    const updated = [...objekte];
+    updated[activeIdx] = {
+      ...updated[activeIdx],
+      [field]: { ...(updated[activeIdx][field] || {}), [key]: value },
+    };
+    setObjekte(updated);
+  };
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 
@@ -202,6 +212,109 @@ export const KundeObjektPage: React.FC = () => {
       <div className="kf-section">
         <h3 className="kf-section-title">Orientierung</h3>
         <FormField label="Die Aufenthaltsräume orientieren sich" field="orientierung" placeholder="Nord, Süd, Ost, West..." {...fp('orientierung')} />
+      </div>
+
+      {/* Sanierung Außen */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Sanierung Außen</h3>
+        <div className="kf-row">
+          <FormField label="Bauwerk (Jahr)" field="sanierungAussen_bauwerk" type="number" half
+            value={(data.sanierungAussen || {}).bauwerk}
+            onChange={(_, v) => updateJson('sanierungAussen', 'bauwerk', v)} />
+          <FormField label="Dachdeckung (Jahr)" field="sanierungAussen_dachdeckung" type="number" half
+            value={(data.sanierungAussen || {}).dachdeckung}
+            onChange={(_, v) => updateJson('sanierungAussen', 'dachdeckung', v)} />
+        </div>
+        <FormField label="Außenfassade (Jahr)" field="sanierungAussen_aussenfassade" type="number"
+          value={(data.sanierungAussen || {}).aussenfassade}
+          onChange={(_, v) => updateJson('sanierungAussen', 'aussenfassade', v)} />
+      </div>
+
+      {/* Sanierung Innen */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Sanierung Innen</h3>
+        <div className="kf-row">
+          <FormField label="Fenster (Jahr)" field="sanierungInnen_fenster" type="number" half
+            value={(data.sanierungInnen || {}).fenster}
+            onChange={(_, v) => updateJson('sanierungInnen', 'fenster', v)} />
+          <FormField label="Heizung (Jahr)" field="sanierungInnen_heizung" type="number" half
+            value={(data.sanierungInnen || {}).heizung}
+            onChange={(_, v) => updateJson('sanierungInnen', 'heizung', v)} />
+        </div>
+        <div className="kf-row">
+          <FormField label="Elektro (Jahr)" field="sanierungInnen_elektro" type="number" half
+            value={(data.sanierungInnen || {}).elektro}
+            onChange={(_, v) => updateJson('sanierungInnen', 'elektro', v)} />
+          <FormField label="Maler (Jahr)" field="sanierungInnen_maler" type="number" half
+            value={(data.sanierungInnen || {}).maler}
+            onChange={(_, v) => updateJson('sanierungInnen', 'maler', v)} />
+        </div>
+        <FormField label="Innenputz (Jahr)" field="sanierungInnen_innenputz" type="number"
+          value={(data.sanierungInnen || {}).innenputz}
+          onChange={(_, v) => updateJson('sanierungInnen', 'innenputz', v)} />
+      </div>
+
+      {/* Badezimmer */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Badezimmer</h3>
+        <div className="kf-row">
+          <FormField label="Anzahl" field="ausstattungBadezimmer_anzahl" type="number" half
+            value={(data.ausstattungBadezimmer || {}).anzahl}
+            onChange={(_, v) => updateJson('ausstattungBadezimmer', 'anzahl', v)} />
+          <FormField label="Ausstattung" field="ausstattungBadezimmer_ausstattung" half
+            placeholder="Standard, Gehoben..."
+            value={(data.ausstattungBadezimmer || {}).ausstattung}
+            onChange={(_, v) => updateJson('ausstattungBadezimmer', 'ausstattung', v)} />
+        </div>
+        <TagInput
+          label="Ausstattungsdetails"
+          tags={(data.ausstattungBadezimmer || {}).items || []}
+          onChange={(items) => updateJson('ausstattungBadezimmer', 'items', items)}
+          placeholder="z.B. Dusche, Badewanne, Doppelwaschbecken..."
+        />
+      </div>
+
+      {/* Heizung */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Heizung</h3>
+        <div className="kf-row">
+          <FormField label="Heizsystem" field="heizung_heizsystem" half
+            placeholder="Fußbodenheizung, Radiatoren..."
+            value={(data.heizung || {}).heizsystem}
+            onChange={(_, v) => updateJson('heizung', 'heizsystem', v)} />
+          <FormField label="Heizungsmedium" field="heizung_heizungsmedium" half
+            placeholder="Gas, Fernwärme, Wärmepumpe..."
+            value={(data.heizung || {}).heizungsmedium}
+            onChange={(_, v) => updateJson('heizung', 'heizungsmedium', v)} />
+        </div>
+        <TagInput
+          label="Zusätzliche Heizquellen"
+          tags={(data.heizung || {}).zusaetzliche || []}
+          onChange={(items) => updateJson('heizung', 'zusaetzliche', items)}
+          placeholder="z.B. Kachelofen, Solar..."
+        />
+      </div>
+
+      {/* Ausstattung Außenbereich */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Ausstattung Außenbereich</h3>
+        <TagInput
+          label="Außenbereich"
+          tags={data.ausstattungAussenbereich || []}
+          onChange={(items) => set('ausstattungAussenbereich', items)}
+          placeholder="z.B. Pool, Garten, Carport..."
+        />
+      </div>
+
+      {/* Weitere Ausstattungen */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Weitere Ausstattungen</h3>
+        <TagInput
+          label="Ausstattungen"
+          tags={data.weitereAusstattungen || []}
+          onChange={(items) => set('weitereAusstattungen', items)}
+          placeholder="z.B. Alarmanlage, Sauna, Kamin..."
+        />
       </div>
     </div>
   );

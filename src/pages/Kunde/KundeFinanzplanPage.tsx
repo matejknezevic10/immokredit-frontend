@@ -148,6 +148,61 @@ export const KundeFinanzplanPage: React.FC = () => {
         <FormField label="Langfr. Finanzierungsbedarf Brutto" field="langfrFinanzierungsbedarfBrutto" type="number" unit="€" {...fp('langfrFinanzierungsbedarfBrutto')} />
       </div>
 
+      {/* Finanzierungsnebenkosten 1 */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Finanzierungsnebenkosten 1</h3>
+        <div className="kf-row">
+          <FormField label="Bearbeitungsspesen" field="bearbeitungsspesen" type="number" unit="€" half {...fp('bearbeitungsspesen')} />
+          <FormField label="Kreditvermittlerprovision" field="kreditvermittlerprovision" type="number" unit="€" half {...fp('kreditvermittlerprovision')} />
+        </div>
+        <div className="kf-row">
+          <FormField label="Schätzgebühr" field="schaetzgebuehr" type="number" unit="€" half {...fp('schaetzgebuehr')} />
+          <FormField label="Eintragungsgebühr Pfandrecht" field="eintragungsgebuehrPfandrecht" type="number" unit="€" half {...fp('eintragungsgebuehrPfandrecht')} />
+        </div>
+        <FormField label="Legalisierungsgebühren" field="legalisierungsgebuehren" type="number" unit="€" {...fp('legalisierungsgebuehren')} />
+      </div>
+
+      {/* Finanzierungsnebenkosten 2 */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Finanzierungsnebenkosten 2</h3>
+        <div className="kf-row">
+          <FormField label="Grundbucheintragung" field="grundbucheintragung" type="number" unit="€" half {...fp('grundbucheintragung')} />
+          <FormField label="Grundbuchauszug" field="grundbuchauszug" type="number" unit="€" half {...fp('grundbuchauszug')} />
+        </div>
+        <FormField label="Finanzierungsberatungshonorar" field="finanzierungsberatungshonorar" type="number" unit="€" {...fp('finanzierungsberatungshonorar')} />
+      </div>
+
+      {/* Zwischenfinanzierung */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Zwischenfinanzierung</h3>
+        <div className="kf-row">
+          <FormField label="Kreditbetrag" field="zwischenKreditbetrag" type="number" unit="€" half {...fp('zwischenKreditbetrag')} />
+          <FormField label="Zinssatz" field="zwischenZinssatz" type="number" unit="%" half {...fp('zwischenZinssatz')} />
+        </div>
+        <div className="kf-row">
+          <FormField label="Laufzeit" field="zwischenLaufzeitMonate" type="number" unit="Monate" half {...fp('zwischenLaufzeitMonate')} />
+          <FormField label="Bearbeitungsspesen" field="zwischenBearbeitungsspesen" type="number" unit="€" half {...fp('zwischenBearbeitungsspesen')} />
+        </div>
+        <div className="kf-row">
+          <FormField label="Abdeckung durch" field="zwischenAbdeckungDurch" half {...fp('zwischenAbdeckungDurch')} />
+          <FormField label="Sicherheiten" field="zwischenSicherheiten" half {...fp('zwischenSicherheiten')} />
+        </div>
+        <FormField label="Finanzierungsnebenkosten Zwischen" field="finanzierungsnebenkostenZwischen" type="number" unit="€" {...fp('finanzierungsnebenkostenZwischen')} />
+      </div>
+
+      {/* Garantie für Firma */}
+      <div className="kf-section">
+        <h3 className="kf-section-title">Garantie für Firma</h3>
+        <div className="kf-row">
+          <FormField label="Garantie Betrag" field="garantieBetrag" type="number" unit="€" half {...fp('garantieBetrag')} />
+          <FormField label="Garantie Termin" field="garantieTermin" type="date" half {...fp('garantieTermin')} />
+        </div>
+        <div className="kf-row">
+          <FormField label="Laufzeit" field="garantieLaufzeitMonate" type="number" unit="Monate" half {...fp('garantieLaufzeitMonate')} />
+          <FormField label="Original an" field="garantieOriginalAn" half {...fp('garantieOriginalAn')} />
+        </div>
+      </div>
+
       {/* Anmerkungen */}
       <div className="kf-section">
         <h3 className="kf-section-title">Anmerkungen zum Finanzierungsplan</h3>

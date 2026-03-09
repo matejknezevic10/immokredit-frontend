@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
+import { ArraySection, ArrayColumn } from '@/components/ArraySection';
 import './KundeForm.css';
 
 // ── Validation helpers ──
@@ -16,8 +17,6 @@ const validatePositiveNumber = (v: any): string => {
 };
 
 const FIELD_RULES: Record<string, (v: any) => string> = {
-  nettoverdienst: validatePositiveNumber,
-  sonstigeEinkuenfte: validatePositiveNumber,
   betriebskostenMiete: validatePositiveNumber,
   energiekosten: validatePositiveNumber,
   telefonInternet: validatePositiveNumber,
@@ -33,6 +32,34 @@ const FIELD_RULES: Record<string, (v: any) => string> = {
   bestandskrediteRate: validatePositiveNumber,
   zumutbareKreditrate: validatePositiveNumber,
 };
+
+// ── Array column definitions ──
+const EINKOMMEN_COLUMNS: ArrayColumn[] = [
+  { field: 'name', label: 'Name / Rolle', half: true, placeholder: 'z.B. Kreditnehmer' },
+  { field: 'nettoverdienst', label: 'Nettoverdienst p.M.', type: 'number', unit: '€', half: true },
+  { field: 'gehaelter14', label: 'Gehälter (14x)', type: 'number', half: true },
+  { field: 'sonstigeEinkuenfte', label: 'Sonstige Einkünfte p.M.', type: 'number', unit: '€', half: true },
+];
+
+const BESTANDSKREDITE_COLUMNS: ArrayColumn[] = [
+  { field: 'institut', label: 'Institut', half: true },
+  { field: 'urspruenglicherBetrag', label: 'Urspr. Betrag', type: 'number', unit: '€', half: true },
+  { field: 'aushaftung', label: 'Aushaftung', type: 'number', unit: '€', half: true },
+  { field: 'laufzeitMonate', label: 'Laufzeit', type: 'number', unit: 'Monate', half: true },
+  { field: 'kreditaufnahme', label: 'Kreditaufnahme', half: true },
+  { field: 'monatlicheRate', label: 'Monatliche Rate', type: 'number', unit: '€', half: true },
+  { field: 'wirdAbgedeckt', label: 'Wird abgedeckt', type: 'boolean', half: true },
+  { field: 'besichertAufObjekt', label: 'Besichert auf Objekt', half: true },
+];
+
+const NEUE_VERPFLICHTUNGEN_COLUMNS: ArrayColumn[] = [
+  { field: 'institut', label: 'Institut', half: true },
+  { field: 'kreditbetrag', label: 'Kreditbetrag', type: 'number', unit: '€', half: true },
+  { field: 'laufzeitMonate', label: 'Laufzeit', type: 'number', unit: 'Monate', half: true },
+  { field: 'kreditaufnahme', label: 'Kreditaufnahme', half: true },
+  { field: 'monatlicheRate', label: 'Monatliche Rate', type: 'number', unit: '€', half: true },
+  { field: 'besichertAufObjekt', label: 'Besichert auf Objekt', half: true },
+];
 
 export const KundeHaushaltPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -77,7 +104,8 @@ export const KundeHaushaltPage: React.FC = () => {
     }
     setSaving(true);
     try {
-      const { id, leadId: _, createdAt, updatedAt, ...fields } = data;
+      // Strip system fields + legacy flat fields (we send einkommen[] directly now)
+      const { id, leadId: _, createdAt, updatedAt, nettoverdienst, sonstigeEinkuenfte, ...fields } = data;
       await api.put(`/kunde/${leadId}/haushalt`, fields);
       setSaved(true);
       toast.success('Haushaltsdaten gespeichert');
@@ -126,13 +154,16 @@ export const KundeHaushaltPage: React.FC = () => {
         </div>
       )}
 
-      {/* Einkommen */}
-      <div className="kf-section">
-        <h3 className="kf-section-title">Einkommen</h3>
-        <p className="kf-hint">Für mehrere Personen nutze das JSON-Feld oder erweitere den Haushalt.</p>
-        <FormField label="Nettoverdienst p.M." field="nettoverdienst" type="number" unit="€" {...fp('nettoverdienst')} />
-        <FormField label="Sonstige Einkünfte p.M." field="sonstigeEinkuenfte" type="number" unit="€" {...fp('sonstigeEinkuenfte')} />
-      </div>
+      {/* Einkommen (dynamic array) */}
+      <ArraySection
+        title="Einkommen"
+        items={data.einkommen}
+        columns={EINKOMMEN_COLUMNS}
+        onChange={(items) => set('einkommen', items)}
+        defaultItem={{ name: 'Kreditnehmer' }}
+        addLabel="+ Person hinzufügen"
+        minRows={1}
+      />
 
       {/* Argumentation Einkünfte */}
       <div className="kf-section">
@@ -171,6 +202,26 @@ export const KundeHaushaltPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Bestandskredite (dynamic array) */}
+      <ArraySection
+        title="Bestandskredite"
+        items={data.bestandskredite}
+        columns={BESTANDSKREDITE_COLUMNS}
+        onChange={(items) => set('bestandskredite', items)}
+        defaultItem={{}}
+        addLabel="+ Bestandskredit hinzufügen"
+      />
+
+      {/* Neue zusätzliche Verpflichtungen (dynamic array) */}
+      <ArraySection
+        title="Neue zusätzliche Verpflichtungen"
+        items={data.neueVerpflichtungen}
+        columns={NEUE_VERPFLICHTUNGEN_COLUMNS}
+        onChange={(items) => set('neueVerpflichtungen', items)}
+        defaultItem={{}}
+        addLabel="+ Verpflichtung hinzufügen"
+      />
+
       {/* Haushaltsrechnung */}
       <div className="kf-section">
         <h3 className="kf-section-title">Haushaltsrechnung</h3>
@@ -189,7 +240,7 @@ export const KundeHaushaltPage: React.FC = () => {
         <h3 className="kf-section-title">Zumutbare Kreditrate</h3>
         <div className="kf-row">
           <FormField label="Frei verfügbares Einkommen" field="freiVerfuegbaresEinkommen" type="number" unit="€" half {...fp('freiVerfuegbaresEinkommen')} />
-          <FormField label="Bestandskredite" field="bestandskrediteRate" type="number" unit="€" half {...fp('bestandskrediteRate')} />
+          <FormField label="Bestandskredite Rate" field="bestandskrediteRate" type="number" unit="€" half {...fp('bestandskrediteRate')} />
         </div>
         <div className="kf-row">
           <FormField label="Rate Förderung" field="rateFoerderung" type="number" unit="€" half {...fp('rateFoerderung')} />

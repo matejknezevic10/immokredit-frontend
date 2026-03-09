@@ -262,6 +262,126 @@
   flex-shrink: 0;
 }
 
+/* ── Array Section (dynamic rows) ── */
+.kf-array-row {
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #fafbfc;
+}
+
+.kf-array-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.kf-array-row-num {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.kf-array-remove-btn {
+  padding: 4px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.kf-array-remove-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.kf-array-add-btn {
+  padding: 8px 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.kf-array-add-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* ── Tag Input (chip list) ── */
+.kf-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.kf-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.kf-tag-remove {
+  background: none;
+  border: none;
+  color: #93c5fd;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.kf-tag-remove:hover {
+  color: #dc2626;
+}
+
+.kf-tag-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.kf-tag-input-row .kf-input {
+  flex: 1;
+}
+
+.kf-tag-add-btn {
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.kf-tag-add-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .kf-page {
