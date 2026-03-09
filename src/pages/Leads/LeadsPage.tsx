@@ -6,7 +6,7 @@ import { CreateLeadModal } from '@/components/Leads/CreateLeadModal';
 import { EditLeadModal } from '@/components/Leads/EditLeadModal';
 import { JeffreyModal } from '@/components/Leads/JeffreyModal';
 import { Lead, CreateLeadDto, UpdateLeadDto } from '@/types';
-import api from '@/services/api';
+// import api from '@/services/api'; // Voice Agent deaktiviert
 import toast from 'react-hot-toast';
 import './LeadsPage.css';
 
@@ -21,7 +21,7 @@ export const LeadsPage: React.FC = () => {
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [leadForJeffrey, setLeadForJeffrey] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [callingLeadId, setCallingLeadId] = useState<string | null>(null);
+  // const [callingLeadId, setCallingLeadId] = useState<string | null>(null); // Voice Agent deaktiviert
   const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
 
   useEffect(() => {
@@ -83,12 +83,13 @@ export const LeadsPage: React.FC = () => {
     setIsJeffreyModalOpen(true);
   };
 
+  /* Voice Agent deaktiviert — Backend-Code bleibt erhalten, Button wird nicht angezeigt
   const handleVoiceAgent = async (lead: Lead) => {
     if (!lead.phone) {
       toast.error('Keine Telefonnummer vorhanden');
       return;
     }
-    if (callingLeadId) return; // Already calling
+    if (callingLeadId) return;
     setCallingLeadId(lead.id);
     try {
       await api.post('/voice-agent/call', {
@@ -102,7 +103,7 @@ export const LeadsPage: React.FC = () => {
     } finally {
       setCallingLeadId(null);
     }
-  };
+  }; */
 
   // Filter leads based on search
   const filteredLeads = leads.filter((lead) => {
@@ -178,7 +179,7 @@ export const LeadsPage: React.FC = () => {
           onEdit={handleEditLead}
           onDelete={handleDeleteClick}
           onJeffrey={handleJeffrey}
-          onVoiceAgent={handleVoiceAgent}
+          // onVoiceAgent={handleVoiceAgent}  // Voice Agent deaktiviert — Backend-Code bleibt erhalten
           onConvertToEigenkunde={handleConvertClick}
         />
       )}
