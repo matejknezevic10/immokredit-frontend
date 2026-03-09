@@ -1,45 +1,62 @@
 // src/pages/Dashboard/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StatsCard } from '@/components/Dashboard/StatsCard';
-import { PipelineStage } from '@/components/Pipeline/PipelineStage';
-import { Deal, DealStage } from '@/types';
 import api from '@/services/api';
 import './Dashboard.css';
 
-interface Stats {
-  totalLeads: number;
-  greenLeads: number;
-  yellowLeads: number;
-  redLeads: number;
-  activeDeals: number;
-  pipedriveVolume: number;
-  automationsToday: number;
-  totalDocuments: number;
-  documentsToday: number;
+// ── Types ──────────────────────────────────────────────
+interface OffenerKunde {
+  id: string;
+  firstName: string;
+  lastName: string;
+  ampelStatus: string;
+  temperatur: string;
+  hasPersonData: boolean;
+  hasHaushaltData: boolean;
+  hasFinanzplanData: boolean;
+  objekteCount: number;
+  missingCount: number;
 }
 
-interface Activity {
+interface LeadPreview {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  source: string;
+  temperatur: string;
+  createdAt: string;
+}
+
+interface DashboardActivity {
   id: string;
   type: string;
   title: string;
-  description?: string;
+  description: string | null;
   createdAt: string;
-  lead?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  lead: { id: string; firstName: string; lastName: string };
 }
 
-const stageConfig = {
-  [DealStage.NEUER_LEAD]: { title: 'Neuer Lead', icon: '📥' },
-  [DealStage.QUALIFIZIERT]: { title: 'Qualifiziert', icon: '💬' },
-  [DealStage.UNTERLAGEN_SAMMELN]: { title: 'Unterlagen sammeln', icon: '📄' },
-  [DealStage.UNTERLAGEN_VOLLSTAENDIG]: { title: 'Unterlagen vollständig', icon: '✅' },
-  [DealStage.BANK_ANFRAGE]: { title: 'Bank-Anfrage', icon: '🏦' },
-  [DealStage.WARTEN_AUF_ZUSAGE]: { title: 'Warten auf Zusage', icon: '⏳' },
-};
+interface MyDashboardData {
+  userName: string;
+  meineKunden: {
+    total: number;
+    mitOffenenDaten: number;
+    ampelVerteilung: { green: number; yellow: number; red: number };
+    temperaturVerteilung: { hot: number; warm: number; cold: number };
+  };
+  verfuegbareLeads: {
+    total: number;
+    neueHeute: number;
+    letzteLeads: LeadPreview[];
+  };
+  offeneKunden: OffenerKunde[];
+  meineAktivitaeten: DashboardActivity[];
+  aktivitaetenHeute: number;
+}
 
+// ── Helpers ────────────────────────────────────────────
 const activityIcons: Record<string, { icon: string; bg: string; color: string }> = {
   LEAD_CREATED: { icon: '👤', bg: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' },
   DEAL_CREATED: { icon: '💼', bg: 'rgba(26, 77, 143, 0.1)', color: 'var(--primary)' },
@@ -67,173 +84,289 @@ function timeAgo(dateStr: string): string {
   return date.toLocaleDateString('de-AT');
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+const getAmpelEmoji = (status: string) => {
+  switch (status) {
+    case 'GREEN': return '🟢';
+    case 'YELLOW': return '🟡';
+    case 'RED': return '🔴';
+    default: return '🟡';
+  }
+};
 
+const getTemperaturEmoji = (temp: string) => {
+  switch (temp) {
+    case 'HOT': return '🔥';
+    case 'WARM': return '🌤️';
+    case 'COLD': return '❄️';
+    default: return '🌤️';
+  }
+};
+
+// ── Component ──────────────────────────────────────────
 export const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [activitiesLoading, setActivitiesLoading] = useState(true);
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [dealsLoading, setDealsLoading] = useState(true);
+  const navigate = useNavigate();
+  const [data, setData] = useState<MyDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch stats
-    api.get<Stats>('/stats').then((res) => {
-      setStats(res.data);
-    }).catch(console.error).finally(() => setStatsLoading(false));
-
-    // Fetch real activities
-    api.get<Activity[]>('/stats/activities').then((res) => {
-      setActivities(res.data);
-    }).catch(console.error).finally(() => setActivitiesLoading(false));
-
-    // Fetch deals for pipeline preview
-    api.get<Deal[]>('/deals').then((res) => {
-      setDeals(res.data);
-    }).catch(console.error).finally(() => setDealsLoading(false));
+    api.get<MyDashboardData>('/stats/my-dashboard')
+      .then((res) => setData(res.data))
+      .catch((err) => console.error('Dashboard load error:', err))
+      .finally(() => setLoading(false));
   }, []);
 
-  const dealsByStage = (stage: DealStage) => deals.filter((d) => d.stage === stage);
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="dashboard-loading">
+          <div className="loading-spinner-large"></div>
+          <p>Lade Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleDealClick = (deal: Deal) => {
-    if (deal.pipedriveDealId) {
-      window.open(`${import.meta.env.VITE_PIPEDRIVE_URL || 'https://immokredit.pipedrive.com'}/deal/${deal.pipedriveDealId}`, '_blank');
-    }
-  };
+  if (!data) {
+    return (
+      <div className="dashboard">
+        <div className="dashboard-error">
+          <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
+          <h3>Dashboard konnte nicht geladen werden</h3>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>
+            Erneut versuchen
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
-      <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Übersicht über alle wichtigen Kennzahlen</p>
+      {/* ── Greeting Header ── */}
+      <div className="dashboard-greeting">
+        <div>
+          <h1 className="page-title">Hallo, {data.userName}!</h1>
+          <p className="page-subtitle">Dein persönliches Dashboard</p>
+        </div>
         <div className="header-actions">
-          <button className="btn btn-primary" onClick={() => window.location.href = '/leads'}>
-            ➕ Neuer Lead
+          <button className="btn btn-primary" onClick={() => navigate('/kunde')}>
+            + Neuer Kunde
           </button>
-          <button className="btn btn-secondary">📥 Export</button>
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* ── Stats Grid ── */}
       <div className="stats-grid">
         <StatsCard
           icon="👥"
-          iconBg="rgba(16, 185, 129, 0.1)"
-          iconColor="var(--success)"
-          value={statsLoading ? '...' : stats?.totalLeads || 0}
-          label="Leads Total"
-          trend={stats ? { direction: 'up', value: `${stats.greenLeads} grüne Leads` } : undefined}
-        />
-        <StatsCard
-          icon="💼"
           iconBg="rgba(26, 77, 143, 0.1)"
           iconColor="var(--primary)"
-          value={statsLoading ? '...' : stats?.activeDeals || 0}
-          label="Aktive Deals"
-          trend={stats?.pipedriveVolume ? { direction: 'up', value: formatCurrency(stats.pipedriveVolume) } : undefined}
+          value={data.meineKunden.total}
+          label="Meine Kunden"
+          trend={data.meineKunden.ampelVerteilung.green > 0
+            ? { direction: 'up', value: `${data.meineKunden.ampelVerteilung.green} grüne` }
+            : undefined}
+          onClick={() => navigate('/kunde')}
         />
         <StatsCard
-          icon="📄"
+          icon="📋"
+          iconBg={data.meineKunden.mitOffenenDaten > 0
+            ? 'rgba(245, 158, 11, 0.1)'
+            : 'rgba(16, 185, 129, 0.1)'}
+          iconColor={data.meineKunden.mitOffenenDaten > 0
+            ? 'var(--warning)'
+            : 'var(--success)'}
+          value={data.meineKunden.mitOffenenDaten}
+          label="Offene Datensätze"
+          trend={data.meineKunden.mitOffenenDaten > 0
+            ? { direction: 'down', value: 'brauchen Daten' }
+            : { direction: 'up', value: 'alles komplett' }}
+        />
+        <StatsCard
+          icon="🎯"
           iconBg="rgba(139, 92, 246, 0.1)"
           iconColor="#8b5cf6"
-          value={statsLoading ? '...' : stats?.totalDocuments || 0}
-          label="Dokumente"
-          trend={stats?.documentsToday ? { direction: 'up', value: `${stats.documentsToday} heute` } : undefined}
+          value={data.verfuegbareLeads.total}
+          label="Verfügbare Leads"
+          trend={data.verfuegbareLeads.neueHeute > 0
+            ? { direction: 'up', value: `${data.verfuegbareLeads.neueHeute} neue heute` }
+            : undefined}
+          onClick={() => navigate('/leads')}
         />
         <StatsCard
           icon="⚡"
           iconBg="rgba(245, 158, 11, 0.1)"
           iconColor="var(--warning)"
-          value={statsLoading ? '...' : stats?.automationsToday || 0}
-          label="Automations heute"
-          trend={{ direction: 'up', value: 'automatisiert' }}
+          value={data.aktivitaetenHeute}
+          label="Aktivitäten heute"
+          trend={{ direction: 'up', value: 'auf meine Kunden' }}
         />
       </div>
 
-      {/* Pipeline Overview */}
-      <div className="pipeline-container">
-        <div className="pipeline-header">
-          <h2 className="pipeline-title">Pipeline Übersicht</h2>
-          <button className="btn btn-secondary" onClick={() => window.location.href = '/pipeline'}>
-            Vollansicht →
+      {/* ── Offene Kunden ── */}
+      <div className="offene-kunden-container">
+        <div className="offene-kunden-header">
+          <h2 className="section-title">Kunden mit offenen Aufgaben</h2>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/kunde')}>
+            Alle Kunden →
           </button>
         </div>
 
-        {dealsLoading ? (
-          <div className="loading-state">
-            <div className="loading-spinner-large"></div>
-            <p>Lade Deals...</p>
+        {data.meineKunden.total === 0 ? (
+          <div className="offene-kunden-empty">
+            <div className="empty-icon-large">🚀</div>
+            <h3>Noch keine Eigenkunden</h3>
+            <p>Übernimm Leads aus der Lead-Liste oder lege einen neuen Kunden an.</p>
+            <div className="empty-actions">
+              <button className="btn btn-primary" onClick={() => navigate('/leads')}>
+                🎯 Leads anzeigen
+              </button>
+              <button className="btn btn-secondary" onClick={() => navigate('/kunde')}>
+                + Neuer Kunde
+              </button>
+            </div>
+          </div>
+        ) : data.offeneKunden.length === 0 ? (
+          <div className="offene-kunden-empty offene-kunden-success">
+            <div className="empty-icon-large">✅</div>
+            <h3>Alle Kunden haben vollständige Daten!</h3>
+            <p>Keine offenen Datensätze bei deinen Kunden.</p>
           </div>
         ) : (
-          <div className="pipeline-scroll">
-            <div className="pipeline-grid">
-              {Object.entries(stageConfig).map(([stage, config]) => (
-                <PipelineStage
-                  key={stage}
-                  stage={stage as DealStage}
-                  title={config.title}
-                  icon={config.icon}
-                  deals={dealsByStage(stage as DealStage)}
-                  onDealClick={handleDealClick}
-                />
-              ))}
-            </div>
+          <div className="offene-kunden-list">
+            {data.offeneKunden.slice(0, 6).map((k) => (
+              <div
+                key={k.id}
+                className="offene-kunden-row"
+                onClick={() => navigate(`/kunde/${k.id}`)}
+              >
+                <div className="offene-kunden-left">
+                  <div className="offene-kunden-avatar">
+                    {k.firstName[0]}{k.lastName[0]}
+                  </div>
+                  <div className="offene-kunden-info">
+                    <span className="offene-kunden-name">
+                      {k.firstName} {k.lastName}
+                    </span>
+                    <span className="offene-kunden-status">
+                      {getAmpelEmoji(k.ampelStatus)} {getTemperaturEmoji(k.temperatur)}
+                    </span>
+                  </div>
+                </div>
+                <div className="offene-kunden-completion">
+                  <CompletionBadge label="Person" done={k.hasPersonData} />
+                  <CompletionBadge label="Haushalt" done={k.hasHaushaltData} />
+                  <CompletionBadge label="Finanzplan" done={k.hasFinanzplanData} />
+                  <CompletionBadge label="Objekt" done={k.objekteCount > 0} />
+                </div>
+              </div>
+            ))}
+            {data.offeneKunden.length > 6 && (
+              <div className="offene-kunden-more">
+                + {data.offeneKunden.length - 6} weitere Kunden mit offenen Daten
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Activity Feed - Real Data */}
-      <div className="activity-feed">
-        <div className="pipeline-header">
-          <h2 className="pipeline-title">Letzte Aktivitäten</h2>
+      {/* ── Bottom Split: Activities + Leads ── */}
+      <div className="dashboard-bottom-split">
+        {/* Meine Aktivitäten */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Meine Aktivitäten</h2>
+          </div>
+
+          {data.meineAktivitaeten.length === 0 ? (
+            <div className="section-empty">
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+              <p>Noch keine Aktivitäten</p>
+            </div>
+          ) : (
+            <div className="activity-list">
+              {data.meineAktivitaeten.map((activity) => {
+                const iconConfig = activityIcons[activity.type] || activityIcons.NOTE_ADDED;
+                return (
+                  <div
+                    className="activity-item"
+                    key={activity.id}
+                    onClick={() => navigate(`/kunde/${activity.lead.id}`)}
+                  >
+                    <div
+                      className="activity-icon"
+                      style={{ background: iconConfig.bg, color: iconConfig.color }}
+                    >
+                      {iconConfig.icon}
+                    </div>
+                    <div className="activity-content">
+                      <div className="activity-title">{activity.title}</div>
+                      <div className="activity-description">
+                        {activity.lead.firstName} {activity.lead.lastName}
+                        {activity.description ? ` — ${activity.description}` : ''}
+                      </div>
+                    </div>
+                    <div className="activity-time">{timeAgo(activity.createdAt)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {activitiesLoading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
-            Lade Aktivitäten...
+        {/* Neueste Leads */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Neueste Leads</h2>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/leads')}>
+              Alle Leads →
+            </button>
           </div>
-        ) : activities.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
-            Noch keine Aktivitäten
-          </div>
-        ) : (
-          activities.slice(0, 10).map((activity) => {
-            const iconConfig = activityIcons[activity.type] || activityIcons.NOTE_ADDED;
-            const leadName = activity.lead
-              ? `${activity.lead.firstName} ${activity.lead.lastName}`
-              : null;
 
-            return (
-              <div className="activity-item" key={activity.id}>
+          {data.verfuegbareLeads.letzteLeads.length === 0 ? (
+            <div className="section-empty">
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+              <p>Keine offenen Leads</p>
+            </div>
+          ) : (
+            <div className="leads-preview-list">
+              {data.verfuegbareLeads.letzteLeads.map((lead) => (
                 <div
-                  className="activity-icon"
-                  style={{ background: iconConfig.bg, color: iconConfig.color }}
+                  key={lead.id}
+                  className="lead-preview-item"
+                  onClick={() => navigate('/leads')}
                 >
-                  {iconConfig.icon}
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">
-                    {activity.title}
+                  <div className="lead-preview-left">
+                    <div className="lead-preview-avatar">
+                      {lead.firstName[0]}{lead.lastName[0]}
+                    </div>
+                    <div className="lead-preview-info">
+                      <span className="lead-preview-name">
+                        {lead.firstName} {lead.lastName}
+                      </span>
+                      <span className="lead-preview-email">{lead.email}</span>
+                    </div>
                   </div>
-                  <div className="activity-description">
-                    {activity.description || (leadName ? `Lead: ${leadName}` : '')}
+                  <div className="lead-preview-right">
+                    <span className="lead-source-badge">{lead.source}</span>
+                    <span className="lead-preview-temp">
+                      {getTemperaturEmoji(lead.temperatur)}
+                    </span>
+                    <span className="lead-preview-time">{timeAgo(lead.createdAt)}</span>
                   </div>
                 </div>
-                <div className="activity-time">{timeAgo(activity.createdAt)}</div>
-              </div>
-            );
-          })
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+// ── Sub-Component ──────────────────────────────────────
+const CompletionBadge: React.FC<{ label: string; done: boolean }> = ({ label, done }) => (
+  <span className={`completion-badge ${done ? 'complete' : 'missing'}`}>
+    {done ? '✅' : '❌'} {label}
+  </span>
+);

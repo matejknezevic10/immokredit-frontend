@@ -12,6 +12,7 @@ interface StatsCardProps {
     direction: 'up' | 'down';
     value: string;
   };
+  onClick?: () => void;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -21,9 +22,10 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   value,
   label,
   trend,
+  onClick,
 }) => {
   return (
-    <div className="stat-card">
+    <div className={`stat-card${onClick ? ' stat-card-clickable' : ''}`} onClick={onClick}>
       <div className="stat-header">
         <div className="stat-icon" style={{ background: iconBg, color: iconColor }}>
           {icon}
