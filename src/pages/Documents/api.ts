@@ -1,6 +1,6 @@
 // src/pages/Documents/api.ts
 
-export const API_BASE = import.meta.env.VITE_API_URL || 'https://immokredit-backend-production.up.railway.app';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}): Promise<any> {
   const token = localStorage.getItem('immokredit_token');
