@@ -111,7 +111,9 @@ export const PipelinePage: React.FC = () => {
   // Filter deals
   const filteredDeals = activeFilter === 'alle'
     ? deals
-    : deals.filter((d) => d.assignee?.name.toLowerCase() === activeFilter);
+    : activeFilter === 'unassigned'
+      ? deals.filter((d) => !d.assignee)
+      : deals.filter((d) => d.assignee?.name.toLowerCase() === activeFilter);
 
   const dealsByStage = (stageId: number) => filteredDeals.filter((d) => d.pipedriveStageId === stageId);
 
