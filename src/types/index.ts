@@ -39,6 +39,9 @@ export interface Lead {
   temperatur: Temperatur;
   score: number;
   kaufwahrscheinlichkeit?: number;
+  isKunde?: boolean;
+  assignedToId?: string;
+  assignedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

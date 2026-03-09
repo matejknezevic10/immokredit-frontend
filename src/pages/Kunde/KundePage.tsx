@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 import './KundePage.css';
 
 interface Kunde {
@@ -53,12 +54,16 @@ export const KundePage: React.FC = () => {
     if (!newKunde.firstName || !newKunde.lastName) return;
     setCreating(true);
     try {
+      // 1. Lead erstellen
       const res = await api.post('/leads', newKunde);
+      // 2. Sofort als Eigenkunde übernehmen
+      await api.post(`/leads/${res.data.id}/convert-to-eigenkunde`);
       setShowModal(false);
       setNewKunde({ firstName: '', lastName: '', email: '', phone: '', source: 'Manuell' });
-      // Navigate directly to the new customer
+      toast.success(`${newKunde.firstName} ${newKunde.lastName} als Eigenkunde angelegt`);
       navigate(`/kunde/${res.data.id}`);
-    } catch (err) {
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Anlegen');
       console.error('Failed to create kunde:', err);
     } finally {
       setCreating(false);
@@ -90,8 +95,8 @@ export const KundePage: React.FC = () => {
     <div className="kunde-page">
       <div className="kunde-header">
         <div>
-          <h1 className="kunde-title">Kunden</h1>
-          <p className="kunde-subtitle">{kunden.length} Kunden gesamt</p>
+          <h1 className="kunde-title">Meine Kunden</h1>
+          <p className="kunde-subtitle">{kunden.length} Eigenkunde{kunden.length !== 1 ? 'n' : ''}</p>
         </div>
         <div className="kunde-header-actions">
           <input
@@ -139,9 +144,14 @@ export const KundePage: React.FC = () => {
           </div>
         ))}
 
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !search && (
           <div className="kunde-empty">
-            Keine Kunden gefunden
+            Noch keine Eigenkunden. Übernimm Leads aus der Lead-Liste oder lege einen neuen Kunden an.
+          </div>
+        )}
+        {filtered.length === 0 && search && (
+          <div className="kunde-empty">
+            Keine Kunden gefunden für „{search}"
           </div>
         )}
       </div>
@@ -151,7 +161,7 @@ export const KundePage: React.FC = () => {
         <div className="kunde-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="kunde-modal" onClick={e => e.stopPropagation()}>
             <div className="kunde-modal-header">
-              <h2>Neuen Kunden anlegen</h2>
+              <h2>Neuen Eigenkunden anlegen</h2>
               <button className="kunde-modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
 

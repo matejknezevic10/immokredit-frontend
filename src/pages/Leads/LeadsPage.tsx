@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import './LeadsPage.css';
 
 export const LeadsPage: React.FC = () => {
-  const { leads, isLoading, error, fetchLeads, createLead, updateLead, deleteLead } =
+  const { leads, isLoading, error, fetchLeads, createLead, updateLead, deleteLead, convertToEigenkunde } =
     useLeadsStore();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -22,6 +22,7 @@ export const LeadsPage: React.FC = () => {
   const [leadForJeffrey, setLeadForJeffrey] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [callingLeadId, setCallingLeadId] = useState<string | null>(null);
+  const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -55,6 +56,26 @@ export const LeadsPage: React.FC = () => {
 
   const handleDeleteCancel = () => {
     setLeadToDelete(null);
+  };
+
+  const handleConvertClick = (lead: Lead) => {
+    setLeadToConvert(lead);
+  };
+
+  const handleConvertConfirm = async () => {
+    if (leadToConvert) {
+      try {
+        await convertToEigenkunde(leadToConvert.id);
+        toast.success(`${leadToConvert.firstName} ${leadToConvert.lastName} als Eigenkunde übernommen`);
+        setLeadToConvert(null);
+      } catch (err: any) {
+        toast.error(err.response?.data?.error || err.message || 'Fehler bei der Übernahme');
+      }
+    }
+  };
+
+  const handleConvertCancel = () => {
+    setLeadToConvert(null);
   };
 
   const handleJeffrey = (lead: Lead) => {
@@ -158,6 +179,7 @@ export const LeadsPage: React.FC = () => {
           onDelete={handleDeleteClick}
           onJeffrey={handleJeffrey}
           onVoiceAgent={handleVoiceAgent}
+          onConvertToEigenkunde={handleConvertClick}
         />
       )}
 
@@ -225,6 +247,36 @@ export const LeadsPage: React.FC = () => {
               </button>
               <button className="btn btn-danger" onClick={handleDeleteConfirm}>
                 🗑️ Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Eigenkunde Confirmation */}
+      {leadToConvert && (
+        <div className="modal-overlay" onClick={handleConvertCancel}>
+          <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Als Eigenkunde übernehmen?</h2>
+              <button className="modal-close" onClick={handleConvertCancel}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>
+                Möchtest du <strong>{leadToConvert.firstName} {leadToConvert.lastName}</strong> als deinen Eigenkunden übernehmen?
+              </p>
+              <p className="text-secondary">
+                Der Lead verschwindet aus der Lead-Liste und wird unter deinen Kunden angezeigt.
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={handleConvertCancel}>
+                Abbrechen
+              </button>
+              <button className="btn btn-primary" onClick={handleConvertConfirm}>
+                🧑‍💼 Übernehmen
               </button>
             </div>
           </div>

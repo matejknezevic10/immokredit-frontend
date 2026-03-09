@@ -13,6 +13,7 @@ interface LeadsStore {
   createLead: (data: CreateLeadDto) => Promise<Lead>;
   updateLead: (id: string, data: UpdateLeadDto) => Promise<Lead>;
   deleteLead: (id: string) => Promise<void>;
+  convertToEigenkunde: (id: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -73,6 +74,19 @@ export const useLeadsStore = create<LeadsStore>((set) => ({
       }));
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
+
+  convertToEigenkunde: async (id: string) => {
+    try {
+      await leadsService.convertToEigenkunde(id);
+      // Lead aus der Liste entfernen (ist jetzt Eigenkunde)
+      set((state) => ({
+        leads: state.leads.filter((lead) => lead.id !== id),
+      }));
+    } catch (error: any) {
+      set({ error: error.message });
       throw error;
     }
   },

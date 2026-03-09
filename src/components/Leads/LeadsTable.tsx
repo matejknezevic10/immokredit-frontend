@@ -9,6 +9,7 @@ interface LeadsTableProps {
   onDelete: (lead: Lead) => void;
   onJeffrey?: (lead: Lead) => void;
   onVoiceAgent?: (lead: Lead) => void;
+  onConvertToEigenkunde?: (lead: Lead) => void;
 }
 
 const getAmpelEmoji = (status: string) => {
@@ -47,7 +48,7 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete, onJeffrey, onVoiceAgent }) => {
+export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete, onJeffrey, onVoiceAgent, onConvertToEigenkunde }) => {
   if (leads.length === 0) {
     return (
       <div className="empty-state">
@@ -102,6 +103,15 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete,
               <td className="date-cell">{formatDate(lead.createdAt)}</td>
               <td>
                 <div className="action-buttons">
+                  {onConvertToEigenkunde && (
+                    <button
+                      className="btn-icon btn-convert"
+                      onClick={() => onConvertToEigenkunde(lead)}
+                      title="Als Eigenkunde übernehmen"
+                    >
+                      🧑‍💼
+                    </button>
+                  )}
                   {onVoiceAgent && (
                     <button
                       className="btn-icon btn-voice"

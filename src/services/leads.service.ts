@@ -31,4 +31,10 @@ export const leadsService = {
   delete: async (id: string): Promise<void> => {
     await api.delete(`/leads/${id}`);
   },
+
+  // Convert lead to Eigenkunde
+  convertToEigenkunde: async (id: string): Promise<Lead> => {
+    const response = await api.post<Lead>(`/leads/${id}/convert-to-eigenkunde`);
+    return response.data;
+  },
 };
