@@ -48,6 +48,27 @@ interface DealPreview {
   addTime: string;
 }
 
+interface TopLead {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  score: number;
+  ampelStatus: string;
+  temperatur: string;
+  source: string;
+  amount: number | null;
+  createdAt: string;
+}
+
+interface LeadQualitaet {
+  total: number;
+  avgScore: number;
+  ampel: { green: number; yellow: number; red: number };
+  temperatur: { hot: number; warm: number; cold: number };
+}
+
 interface MyDashboardData {
   userName: string;
   meineKunden: {
@@ -65,6 +86,8 @@ interface MyDashboardData {
   meineAktivitaeten: DashboardActivity[];
   aktivitaetenHeute: number;
   meineDeals: DealPreview[];
+  topLeads: TopLead[];
+  leadQualitaet: LeadQualitaet;
 }
 
 // ── Helpers ────────────────────────────────────────────
@@ -222,6 +245,123 @@ export const Dashboard: React.FC = () => {
           trend={{ direction: 'up', value: 'auf meine Kunden' }}
         />
       </div>
+
+      {/* ── Lead-Qualität & Top Leads ── */}
+      {data.leadQualitaet && data.leadQualitaet.total > 0 && (
+        <div className="lead-quality-section">
+          <div className="lead-quality-left">
+            <h2 className="section-title">Lead-Qualität</h2>
+            <p className="lead-quality-subtitle">{data.leadQualitaet.total} Leads insgesamt · Ø Score: {data.leadQualitaet.avgScore}</p>
+
+            {/* Temperatur Bars */}
+            <div className="quality-metric">
+              <div className="quality-metric-header">
+                <span className="quality-metric-label">Temperatur</span>
+              </div>
+              <div className="quality-bars">
+                {data.leadQualitaet.temperatur.hot > 0 && (
+                  <div
+                    className="quality-bar quality-bar-hot"
+                    style={{ flex: data.leadQualitaet.temperatur.hot }}
+                    title={`${data.leadQualitaet.temperatur.hot} Hot`}
+                  >
+                    <span>🔥 {data.leadQualitaet.temperatur.hot}</span>
+                  </div>
+                )}
+                {data.leadQualitaet.temperatur.warm > 0 && (
+                  <div
+                    className="quality-bar quality-bar-warm"
+                    style={{ flex: data.leadQualitaet.temperatur.warm }}
+                    title={`${data.leadQualitaet.temperatur.warm} Warm`}
+                  >
+                    <span>🌤️ {data.leadQualitaet.temperatur.warm}</span>
+                  </div>
+                )}
+                {data.leadQualitaet.temperatur.cold > 0 && (
+                  <div
+                    className="quality-bar quality-bar-cold"
+                    style={{ flex: data.leadQualitaet.temperatur.cold }}
+                    title={`${data.leadQualitaet.temperatur.cold} Cold`}
+                  >
+                    <span>❄️ {data.leadQualitaet.temperatur.cold}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ampel Bars */}
+            <div className="quality-metric">
+              <div className="quality-metric-header">
+                <span className="quality-metric-label">Ampel-Status</span>
+              </div>
+              <div className="quality-bars">
+                {data.leadQualitaet.ampel.green > 0 && (
+                  <div
+                    className="quality-bar quality-bar-green"
+                    style={{ flex: data.leadQualitaet.ampel.green }}
+                  >
+                    <span>🟢 {data.leadQualitaet.ampel.green}</span>
+                  </div>
+                )}
+                {data.leadQualitaet.ampel.yellow > 0 && (
+                  <div
+                    className="quality-bar quality-bar-yellow"
+                    style={{ flex: data.leadQualitaet.ampel.yellow }}
+                  >
+                    <span>🟡 {data.leadQualitaet.ampel.yellow}</span>
+                  </div>
+                )}
+                {data.leadQualitaet.ampel.red > 0 && (
+                  <div
+                    className="quality-bar quality-bar-red"
+                    style={{ flex: data.leadQualitaet.ampel.red }}
+                  >
+                    <span>🔴 {data.leadQualitaet.ampel.red}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Top Leads by Score */}
+          {data.topLeads && data.topLeads.length > 0 && (
+            <div className="lead-quality-right">
+              <h2 className="section-title">Top Leads nach Score</h2>
+              <div className="top-leads-list">
+                {data.topLeads.map((lead, idx) => (
+                  <div
+                    key={lead.id}
+                    className="top-lead-row"
+                    onClick={() => navigate('/leads')}
+                  >
+                    <div className="top-lead-rank">#{idx + 1}</div>
+                    <div className="top-lead-info">
+                      <span className="top-lead-name">
+                        {getTemperaturEmoji(lead.temperatur)} {lead.firstName} {lead.lastName}
+                      </span>
+                      <span className="top-lead-meta">
+                        {lead.source}{lead.amount ? ` · ${formatCurrency(lead.amount)}` : ''}
+                      </span>
+                    </div>
+                    <div className="top-lead-score-container">
+                      <div className="top-lead-score-bar">
+                        <div
+                          className="top-lead-score-fill"
+                          style={{
+                            width: `${lead.score}%`,
+                            background: lead.score >= 70 ? 'var(--success)' : lead.score >= 40 ? 'var(--warning)' : 'var(--danger)',
+                          }}
+                        />
+                      </div>
+                      <span className="top-lead-score-value">{lead.score}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Offene Kunden ── */}
       <div className="offene-kunden-container">
