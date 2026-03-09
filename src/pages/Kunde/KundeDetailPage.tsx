@@ -227,6 +227,45 @@ export const KundeDetailPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Jeffrey OCR — kompakte Inline-Leiste */}
+      <div className="jeffrey-section jeffrey-compact">
+        <div className="jeffrey-header">
+          <div className="jeffrey-info">
+            <span className="jeffrey-icon">🤖</span>
+            <span className="jeffrey-title">Jeffrey</span>
+            <span className="jeffrey-desc">{docCount} Dokument{docCount !== 1 ? 'e' : ''}</span>
+          </div>
+          <button
+            className={`jeffrey-btn ${analyzing ? 'analyzing' : ''}`}
+            onClick={runJeffreyOCR}
+            disabled={analyzing || docCount === 0}
+          >
+            {analyzing ? (
+              <><span className="jeffrey-spinner">⏳</span> Analysiere...</>
+            ) : (
+              <>🔍 Analysieren</>
+            )}
+          </button>
+        </div>
+        {ocrResults && ocrResults.length > 0 && (
+          <div className="jeffrey-results">
+            {ocrResults.map((r, i) => (
+              <div key={i} className="jeffrey-result-item">
+                <span className="jeffrey-result-type">{r.documentType}</span>
+                <span className="jeffrey-result-file">{r.filename}</span>
+                <span className="jeffrey-result-fields">{r.fieldsExtracted} Felder</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {ocrResults && ocrResults.length === 0 && (
+          <div className="jeffrey-results">
+            <p className="jeffrey-results-empty">Keine neuen Dokumente zum Analysieren.</p>
+          </div>
+        )}
+        {ocrError && <div className="jeffrey-error">❌ {ocrError}</div>}
+      </div>
+
       {/* Finanzierungsdaten — sofort sichtbar */}
       <p className="kunde-section-label">Finanzierungsdaten</p>
       <div className="kunde-tiles">
@@ -414,56 +453,6 @@ export const KundeDetailPage: React.FC = () => {
           </div>
         </>
       )}
-
-      {/* Jeffrey OCR — kompakte Inline-Leiste */}
-      <div className="jeffrey-section jeffrey-compact">
-        <div className="jeffrey-header">
-          <div className="jeffrey-info">
-            <span className="jeffrey-icon">🤖</span>
-            <div>
-              <h3 className="jeffrey-title">Jeffrey Dokumenten-Analyse</h3>
-              <p className="jeffrey-desc">
-                {docCount} Dokument{docCount !== 1 ? 'e' : ''} vorhanden
-              </p>
-            </div>
-          </div>
-          <button
-            className={`jeffrey-btn ${analyzing ? 'analyzing' : ''}`}
-            onClick={runJeffreyOCR}
-            disabled={analyzing || docCount === 0}
-          >
-            {analyzing ? (
-              <><span className="jeffrey-spinner">⏳</span> Analysiere...</>
-            ) : (
-              <>🔍 Analysieren</>
-            )}
-          </button>
-        </div>
-
-        {/* OCR Results — nur wenn vorhanden */}
-        {ocrResults && ocrResults.length > 0 && (
-          <div className="jeffrey-results">
-            <p className="jeffrey-results-title">✅ {ocrResults.length} Dokument{ocrResults.length !== 1 ? 'e' : ''} analysiert:</p>
-            {ocrResults.map((r, i) => (
-              <div key={i} className="jeffrey-result-item">
-                <span className="jeffrey-result-type">{r.documentType}</span>
-                <span className="jeffrey-result-file">{r.filename}</span>
-                <span className="jeffrey-result-fields">{r.fieldsExtracted} Felder</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {ocrResults && ocrResults.length === 0 && (
-          <div className="jeffrey-results">
-            <p className="jeffrey-results-empty">Keine neuen Dokumente zum Analysieren.</p>
-          </div>
-        )}
-
-        {ocrError && (
-          <div className="jeffrey-error">❌ {ocrError}</div>
-        )}
-      </div>
 
       {/* Digital Signature Section — only show at UNTERLAGEN_VOLLSTAENDIG */}
       {dealStage === 'UNTERLAGEN_VOLLSTAENDIG' && !signatureStatus.signed && (
