@@ -50,8 +50,12 @@ export const SecureDownloadPage: React.FC = () => {
 
       setLeadName(valData.leadName);
 
-      // Load documents
-      const docsRes = await fetch(`${API_BASE}/secure-link/documents/${accessToken}`);
+      // Load documents (POST with password verification)
+      const docsRes = await fetch(`${API_BASE}/secure-link/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, password: password.toUpperCase() }),
+      });
       const docsData = await docsRes.json();
       setDocuments(docsData);
       setValidated(true);

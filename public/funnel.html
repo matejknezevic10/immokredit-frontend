@@ -266,7 +266,10 @@
 </div>
 
 <script>
-const API_URL = 'https://immokredit-backend-production.up.railway.app/api/leads/onepage-funnel';
+// API URL — auto-detect from current host or use production default
+const API_URL = (window.location.hostname === 'localhost')
+  ? 'http://localhost:4000/api/leads/onepage-funnel'
+  : 'https://immokredit-backend-production.up.railway.app/api/leads/onepage-funnel';
 let currentStep = 1;
 const totalSteps = 10;
 const answers = { finanzierungsart: null, immobilieGefunden: null, kaufpreis: null, eigenmittel: null, einkommen: null, beruf: null, plz: null, sprache: null };
