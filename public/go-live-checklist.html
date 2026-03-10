@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ImmoKredit Go-Live Checklist</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    border-radius: 16px; padding: 32px; margin-bottom: 24px; text-align: center;
+  }
+  .header h1 { font-size: 28px; color: white; margin-bottom: 8px; }
+  .header p { color: rgba(255,255,255,0.7); font-size: 14px; }
+
+  /* Progress Bar */
+  .progress-container {
+    background: #1e293b; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;
+    border: 1px solid #334155; position: sticky; top: 10px; z-index: 100;
+  }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .progress-header span { font-size: 14px; color: #94a3b8; }
+  .progress-header .count { font-size: 20px; font-weight: 700; color: #22c55e; }
+  .progress-bar { height: 10px; background: #334155; border-radius: 5px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a);
+    border-radius: 5px; transition: width 0.4s ease; width: 0%;
+  }
+
+  /* Section */
+  .section {
+    background: #1e293b; border-radius: 12px; margin-bottom: 16px;
+    border: 1px solid #334155; overflow: hidden;
+  }
+  .section-header {
+    padding: 16px 20px; cursor: pointer; display: flex; align-items: center;
+    gap: 12px; user-select: none; transition: background 0.2s;
+  }
+  .section-header:hover { background: #253348; }
+  .section-icon { font-size: 22px; }
+  .section-title { flex: 1; }
+  .section-title h2 { font-size: 16px; font-weight: 600; color: #f1f5f9; }
+  .section-title p { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .section-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-critical { background: #dc262620; color: #f87171; border: 1px solid #dc262640; }
+  .badge-required { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b40; }
+  .badge-test { background: #3b82f620; color: #60a5fa; border: 1px solid #3b82f640; }
+  .badge-info { background: #8b5cf620; color: #a78bfa; border: 1px solid #8b5cf640; }
+  .section-chevron { color: #64748b; transition: transform 0.3s; font-size: 18px; }
+  .section.open .section-chevron { transform: rotate(180deg); }
+  .section-count {
+    font-size: 12px; color: #64748b; background: #334155; padding: 2px 8px;
+    border-radius: 10px; min-width: 40px; text-align: center;
+  }
+  .section-count.done { background: #16a34a30; color: #22c55e; }
+
+  /* Items */
+  .section-body { display: none; padding: 0 20px 16px 20px; }
+  .section.open .section-body { display: block; }
+
+  .item {
+    display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid #334155;
+  }
+  .item:last-child { border-bottom: none; }
+  .item input[type="checkbox"] { display: none; }
+  .item label {
+    display: flex; align-items: flex-start; gap: 12px; cursor: pointer; flex: 1;
+  }
+  .checkmark {
+    width: 22px; height: 22px; min-width: 22px; border: 2px solid #475569;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; margin-top: 1px;
+  }
+  .checkmark svg { opacity: 0; transition: opacity 0.2s; }
+  .item input:checked + label .checkmark {
+    background: #16a34a; border-color: #16a34a;
+  }
+  .item input:checked + label .checkmark svg { opacity: 1; }
+  .item input:checked + label .item-text { color: #64748b; text-decoration: line-through; }
+
+  .item-text { flex: 1; }
+  .item-text .title { font-size: 14px; color: #e2e8f0; line-height: 1.4; }
+  .item-text .hint {
+    font-size: 12px; color: #64748b; margin-top: 3px; line-height: 1.4;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .item-text .hint code {
+    background: #334155; padding: 1px 6px; border-radius: 4px; font-size: 11px;
+    color: #94a3b8;
+  }
+
+  /* Severity dots */
+  .sev { width: 8px; height: 8px; border-radius: 50%; min-width: 8px; margin-top: 7px; }
+  .sev-critical { background: #ef4444; box-shadow: 0 0 6px #ef444466; }
+  .sev-required { background: #f59e0b; box-shadow: 0 0 6px #f59e0b66; }
+  .sev-test { background: #3b82f6; }
+  .sev-info { background: #8b5cf6; }
+
+  /* Completed section */
+  .section.all-done .section-header { opacity: 0.6; }
+  .section.all-done .section-title h2 { text-decoration: line-through; }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 24px; color: #475569; font-size: 12px;
+  }
+
+  /* Confetti overlay */
+  .confetti-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 9999; display: none;
+  }
+  .confetti-overlay.active { display: block; }
+
+  /* Reset button */
+  .reset-btn {
+    background: none; border: 1px solid #475569; color: #94a3b8; padding: 6px 14px;
+    border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: #ef4444; color: #f87171; }
+
+  /* Print styles */
+  @media print {
+    body { background: white; color: #1e293b; }
+    .section, .progress-container { border-color: #d1d5db; background: white; }
+    .section-body { display: block !important; }
+    .reset-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>ImmoKredit Go-Live Checklist</h1>
+    <p>Mittwoch 11. Marz 2026 &middot; Team-Einfuhrung 15:30</p>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-header">
+      <span>Fortschritt</span>
+      <span class="count"><span id="done-count">0</span> / <span id="total-count">0</span></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Section 1: Railway ENV Vars -->
+  <div class="section open" data-section="railway">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-icon">&#x26A1;</span>
+      <div class="section-title">
+        <h2>Railway ENV Variablen</h2>
+        <p>Backend-Konfiguration auf Railway setzen</p>
+      </div>
+      <span class="section-badge badge-critical">KRITISCH</span>
+      <span class="section-count" id="count-railway">0/0</span>
+      <span class="section-chevron">&#x25BC;</span>
+    </div>
+    <div class="section-body">
+
+      <div class="item"><input type="checkbox" id="r1" onchange="save()">
+        <label for="r1"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">JWT_SECRET setzen</span>
+        <span class="hint">Starkes Secret generieren: <code>openssl rand -hex 32</code><br>Ohne crasht die App in Production!</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r2" onchange="save()">
+        <label for="r2"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">NODE_ENV = production</span>
+        <span class="hint">Steuert Error-Handling und Security-Checks</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r3" onchange="save()">
+        <label for="r3"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">DATABASE_URL</span>
+        <span class="hint">PostgreSQL Connection String (Railway Postgres)</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r4" onchange="save()">
+        <label for="r4"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">FRONTEND_URL</span>
+        <span class="hint"><code>https://immokredit-frontend.vercel.app</code><br>Fur CORS + SecureLink Download-URLs</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r5" onchange="save()">
+        <label for="r5"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">BACKEND_URL</span>
+        <span class="hint"><code>https://immokredit-backend-production.up.railway.app</code><br>Fur Email-Tracking-Pixel + Voice Agent Webhook</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r6" onchange="save()">
+        <label for="r6"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">OPENAI_API_KEY</span>
+        <span class="hint">Fur Jeffrey AI Chat, OCR, Voice Memo, Email-Analyse</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r7" onchange="save()">
+        <label for="r7"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">PIPEDRIVE_API_TOKEN</span>
+        <span class="hint">Pipedrive &rarr; Einstellungen &rarr; API</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r8" onchange="save()">
+        <label for="r8"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">PIPEDRIVE_ZUSTAENDIG_FIELD_KEY</span>
+        <span class="hint">Custom Field Key fur "Zustandig" Dropdown in Pipedrive</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r9" onchange="save()">
+        <label for="r9"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">SENDGRID_API_KEY</span>
+        <span class="hint">SendGrid Dashboard &rarr; API Keys</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r10" onchange="save()">
+        <label for="r10"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">SENDGRID_FROM_EMAIL + SENDGRID_FROM_NAME</span>
+        <span class="hint">Default: <code>info@immo-kredit.net</code> / <code>ImmoKredit</code></span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r11" onchange="save()">
+        <label for="r11"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">GOOGLE_DRIVE_CLIENT_ID + CLIENT_SECRET + REFRESH_TOKEN</span>
+        <span class="hint">Google Cloud Console &rarr; OAuth2 Credentials</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r12" onchange="save()">
+        <label for="r12"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">GOOGLE_DRIVE_FOLDER_ID</span>
+        <span class="hint">Root Folder ID wo Dokumente gespeichert werden</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="r13" onchange="save()">
+        <label for="r13"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">ANTHROPIC_API_KEY (optional)</span>
+        <span class="hint">Fur Jeffrey OCR mit Claude Vision. Nur wenn OCR genutzt wird.</span></span></label></div>
+
+    </div>
+  </div>
+
+  <!-- Section 2: Vercel -->
+  <div class="section" data-section="vercel">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-icon">&#x25B2;</span>
+      <div class="section-title">
+        <h2>Vercel Frontend</h2>
+        <p>Environment Variables + Deployment</p>
+      </div>
+      <span class="section-badge badge-critical">KRITISCH</span>
+      <span class="section-count" id="count-vercel">0/0</span>
+      <span class="section-chevron">&#x25BC;</span>
+    </div>
+    <div class="section-body">
+
+      <div class="item"><input type="checkbox" id="v1" onchange="save()">
+        <label for="v1"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">VITE_API_URL auf Vercel setzen</span>
+        <span class="hint">Settings &rarr; Environment Variables &rarr;<br><code>VITE_API_URL = https://immokredit-backend-production.up.railway.app/api</code><br>Wurde aus Git entfernt (.env) &mdash; MUSS auf Vercel gesetzt sein!</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="v2" onchange="save()">
+        <label for="v2"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">Vercel Redeploy triggern</span>
+        <span class="hint">Nach ENV-Anderung: Deployments &rarr; letztes Deployment &rarr; Redeploy<br>Env vars werden nur bei neuem Build ubernommen!</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="v3" onchange="save()">
+        <label for="v3"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Frontend aufrufen &mdash; Login-Seite ladt</span>
+        <span class="hint"><code>https://immokredit-frontend.vercel.app</code></span></span></label></div>
+
+    </div>
+  </div>
+
+  <!-- Section 3: Deployment Check -->
+  <div class="section" data-section="deploy">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-icon">&#x1F680;</span>
+      <div class="section-title">
+        <h2>Deployment verifizieren</h2>
+        <p>Backend + Frontend sind online und aktuell</p>
+      </div>
+      <span class="section-badge badge-required">WICHTIG</span>
+      <span class="section-count" id="count-deploy">0/0</span>
+      <span class="section-chevron">&#x25BC;</span>
+    </div>
+    <div class="section-body">
+
+      <div class="item"><input type="checkbox" id="d1" onchange="save()">
+        <label for="d1"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">Railway Health Check = v6-security</span>
+        <span class="hint"><code>https://immokredit-backend-production.up.railway.app/health</code><br>Muss <code>"version": "v6-security"</code> zeigen</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="d2" onchange="save()">
+        <label for="d2"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">Railway Logs prufen &mdash; keine Crash-Loops</span>
+        <span class="hint">Railway Dashboard &rarr; Deployments &rarr; Logs<br>Achte auf: <code>[SECURITY] JWT_SECRET ist nicht gesetzt</code></span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="d3" onchange="save()">
+        <label for="d3"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-required"></span>
+        <span class="item-text"><span class="title">Vercel Deployment erfolgreich (kein Build-Error)</span>
+        <span class="hint">Vercel Dashboard &rarr; gruner Haken beim letzten Deployment</span></span></label></div>
+
+    </div>
+  </div>
+
+  <!-- Section 4: Feature Tests -->
+  <div class="section" data-section="features">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-icon">&#x1F9EA;</span>
+      <div class="section-title">
+        <h2>Feature-Tests</h2>
+        <p>Alle Kernfunktionen einmal durchtesten</p>
+      </div>
+      <span class="section-badge badge-test">TESTEN</span>
+      <span class="section-count" id="count-features">0/0</span>
+      <span class="section-chevron">&#x25BC;</span>
+    </div>
+    <div class="section-body">
+
+      <div class="item"><input type="checkbox" id="f1" onchange="save()">
+        <label for="f1"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-critical"></span>
+        <span class="item-text"><span class="title">Login funktioniert</span>
+        <span class="hint">Als Roland, Slaven oder Daniel einloggen</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f2" onchange="save()">
+        <label for="f2"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Dashboard ladt mit Lead-Qualitat Widget</span>
+        <span class="hint">Temperatur-Bars, Ampel-Verteilung, Top Leads sichtbar</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f3" onchange="save()">
+        <label for="f3"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Leads-Liste ladt + Lead erstellen</span>
+        <span class="hint">Neuen Lead anlegen, Felder ausfullen, speichern</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f4" onchange="save()">
+        <label for="f4"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Pipeline ladt mit Deals</span>
+        <span class="hint">Pipedrive-Deals werden angezeigt, Stages korrekt</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f5" onchange="save()">
+        <label for="f5"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Pipeline Action-Buttons sichtbar</span>
+        <span class="hint">Auf Deal-Karte: Kunde-Link, Unterschrift, SecureLink Icons</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f6" onchange="save()">
+        <label for="f6"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Pipeline Drag &amp; Drop &mdash; Deal verschieben</span>
+        <span class="hint">Deal in andere Stage ziehen &rarr; Pipedrive + lokale DB synchron</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f7" onchange="save()">
+        <label for="f7"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Kunde-Detailseite offnen</span>
+        <span class="hint">Uber Pipeline Kunde-Link &rarr; Person, Haushalt, Objekt Tabs</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f8" onchange="save()">
+        <label for="f8"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Objekt-Formular speichern (DateTime fix)</span>
+        <span class="hint">Baubeginn/Bauende Datum eingeben &rarr; speichern ohne Fehler</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f9" onchange="save()">
+        <label for="f9"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Dokument-Upload funktioniert</span>
+        <span class="hint">PDF oder Bild hochladen (muss eingeloggt sein)</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f10" onchange="save()">
+        <label for="f10"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Jeffrey AI Chat antwortet</span>
+        <span class="hint">Chat offnen, Frage stellen &rarr; Antwort kommt</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="f11" onchange="save()">
+        <label for="f11"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">E-Mail senden (SendGrid)</span>
+        <span class="hint">Test-Email an eigene Adresse senden &rarr; kommt an?</span></span></label></div>
+
+    </div>
+  </div>
+
+  <!-- Section 5: Funnel -->
+  <div class="section" data-section="funnel">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-icon">&#x1F3AF;</span>
+      <div class="section-title">
+        <h2>Lead-Funnel</h2>
+        <p>Offentliches Formular auf der Website</p>
+      </div>
+      <span class="section-badge badge-test">TESTEN</span>
+      <span class="section-count" id="count-funnel">0/0</span>
+      <span class="section-chevron">&#x25BC;</span>
+    </div>
+    <div class="section-body">
+
+      <div class="item"><input type="checkbox" id="fn1" onchange="save()">
+        <label for="fn1"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Funnel-Seite ladt</span>
+        <span class="hint"><code>https://immokredit-frontend.vercel.app/funnel.html</code></span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="fn2" onchange="save()">
+        <label for="fn2"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-test"></span>
+        <span class="item-text"><span class="title">Funnel absenden &rarr; Lead wird erstellt</span>
+        <span class="hint">Formular ausfullen &rarr; absenden &rarr; neuer Lead in Leads-Liste sichtbar</span></span></label></div>
+
+    </div>
+  </div>
+
+  <!-- Section 6: Known Limitations -->
+  <div class="section" data-section="limits">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="section-icon">&#x26A0;&#xFE0F;</span>
+      <div class="section-title">
+        <h2>Bekannte Einschrankungen</h2>
+        <p>Was beim Go-Live noch nicht funktioniert</p>
+      </div>
+      <span class="section-badge badge-info">INFO</span>
+      <span class="section-count" id="count-limits">0/0</span>
+      <span class="section-chevron">&#x25BC;</span>
+    </div>
+    <div class="section-body">
+
+      <div class="item"><input type="checkbox" id="l1" onchange="save()">
+        <label for="l1"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">SecureLink braucht Dokumente beim Lead</span>
+        <span class="hint">Auto-erstellte Leads von Pipedrive haben keine Dokumente &rarr; SecureLink schlagt fehl bis Dokumente hochgeladen werden</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="l2" onchange="save()">
+        <label for="l2"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">Digitale Unterschrift erst ab Stage UNTERLAGEN_VOLLSTANDIG</span>
+        <span class="hint">SignaturePad erscheint erst wenn Deal in passender Stage ist</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="l3" onchange="save()">
+        <label for="l3"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">Voice Agent ist in der GUI deaktiviert</span>
+        <span class="hint">Backend-Code bleibt erhalten. GUI-Buttons auskommentiert. Feature nicht fur Go-Live vorgesehen.</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="l4" onchange="save()">
+        <label for="l4"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">Email-Tracking braucht korrekte BACKEND_URL</span>
+        <span class="hint">Offnungs-Tracking-Pixel funktioniert nur wenn BACKEND_URL korrekt gesetzt ist</span></span></label></div>
+
+      <div class="item"><input type="checkbox" id="l5" onchange="save()">
+        <label for="l5"><span class="checkmark"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="white" stroke-width="2" fill="none"/></svg></span>
+        <span class="sev sev-info"></span>
+        <span class="item-text"><span class="title">Team uber Einschrankungen informiert</span>
+        <span class="hint">Roland, Slaven, Daniel wissen was geht und was nicht</span></span></label></div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="reset-btn" onclick="resetAll()">Checklist zurucksetzen</button>
+    <p style="margin-top:12px">ImmoKredit Go-Live Checklist &middot; Generiert am 10. Marz 2026</p>
+  </div>
+</div>
+
+<canvas id="confetti-canvas" class="confetti-overlay"></canvas>
+
+<script>
+// State management
+const STORAGE_KEY = 'immokredit-golive-checklist';
+
+function save() {
+  const state = {};
+  document.querySelectorAll('.item input[type="checkbox"]').forEach(cb => {
+    state[cb.id] = cb.checked;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateUI();
+}
+
+function load() {
+  try {
+    const state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    Object.entries(state).forEach(([id, checked]) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = checked;
+    });
+  } catch {}
+  updateUI();
+}
+
+function resetAll() {
+  if (!confirm('Alle Checkboxen zurucksetzen?')) return;
+  document.querySelectorAll('.item input[type="checkbox"]').forEach(cb => cb.checked = false);
+  localStorage.removeItem(STORAGE_KEY);
+  updateUI();
+}
+
+function updateUI() {
+  let totalDone = 0, totalAll = 0;
+
+  document.querySelectorAll('.section').forEach(section => {
+    const sectionName = section.dataset.section;
+    const items = section.querySelectorAll('.item input[type="checkbox"]');
+    const done = [...items].filter(i => i.checked).length;
+    const total = items.length;
+
+    totalDone += done;
+    totalAll += total;
+
+    const countEl = document.getElementById('count-' + sectionName);
+    if (countEl) {
+      countEl.textContent = `${done}/${total}`;
+      countEl.classList.toggle('done', done === total && total > 0);
+    }
+
+    section.classList.toggle('all-done', done === total && total > 0);
+  });
+
+  document.getElementById('done-count').textContent = totalDone;
+  document.getElementById('total-count').textContent = totalAll;
+
+  const pct = totalAll > 0 ? (totalDone / totalAll * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Confetti at 100%
+  if (totalDone === totalAll && totalAll > 0) {
+    launchConfetti();
+  }
+}
+
+function toggleSection(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+// Simple confetti
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.classList.add('active');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const colors = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      vx: (Math.random() - 0.5) * 8,
+      vy: Math.random() * 3 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 6 + 3,
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.rotation += p.rotSpeed;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 180) requestAnimationFrame(animate);
+    else { ctx.clearRect(0, 0, canvas.width, canvas.height); canvas.classList.remove('active'); }
+  }
+  animate();
+}
+
+// Init
+load();
+</script>
+</body>
+</html>
