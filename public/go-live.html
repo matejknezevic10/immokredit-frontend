@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImmoKredit CRM — Go-Live Checkliste & Leitfaden</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; }
+
+    .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: white; padding: 40px 0; text-align: center; }
+    .header h1 { font-size: 2.2rem; margin-bottom: 8px; }
+    .header p { opacity: 0.85; font-size: 1.1rem; }
+    .header .date { margin-top: 12px; font-size: 0.9rem; opacity: 0.7; }
+
+    .container { max-width: 1000px; margin: 0 auto; padding: 32px 20px; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 0; background: #e2e8f0; border-radius: 12px 12px 0 0; padding: 4px 4px 0; }
+    .tab { flex: 1; padding: 14px 20px; text-align: center; cursor: pointer; border-radius: 10px 10px 0 0; font-weight: 600; font-size: 14px; transition: all 0.2s; background: transparent; border: none; color: #64748b; }
+    .tab.active { background: white; color: #2563eb; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); }
+    .tab:hover:not(.active) { background: rgba(255,255,255,0.5); }
+
+    .tab-content { display: none; background: white; border-radius: 0 0 12px 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .tab-content.active { display: block; }
+
+    h2 { font-size: 1.5rem; margin-bottom: 20px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+    h3 { font-size: 1.15rem; margin: 24px 0 12px; color: #334155; }
+    h4 { font-size: 1rem; margin: 16px 0 8px; color: #475569; }
+
+    .section { margin-bottom: 32px; }
+
+    /* Checklist Styles */
+    .checklist { list-style: none; }
+    .checklist li { padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s; cursor: pointer; }
+    .checklist li:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .checklist li.checked { background: #f0fdf4; border-color: #bbf7d0; }
+    .checklist li.checked .check-label { text-decoration: line-through; color: #64748b; }
+    .check-box { width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all 0.2s; }
+    .checklist li.checked .check-box { background: #22c55e; border-color: #22c55e; }
+    .checklist li.checked .check-box::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
+    .check-label { font-weight: 500; font-size: 14px; }
+    .check-detail { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+    /* Category badge */
+    .cat-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .cat-infra { background: #dbeafe; color: #1d4ed8; }
+    .cat-email { background: #fce7f3; color: #be185d; }
+    .cat-gdrive { background: #d1fae5; color: #059669; }
+    .cat-ocr { background: #fef3c7; color: #b45309; }
+    .cat-pipe { background: #e0e7ff; color: #4338ca; }
+    .cat-security { background: #fce4ec; color: #c62828; }
+    .cat-ui { background: #f3e8ff; color: #7c3aed; }
+
+    /* Use Case Card */
+    .usecase { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .usecase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .usecase-number { width: 36px; height: 36px; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+    .usecase-title { font-size: 1.1rem; font-weight: 700; color: #1e3a5f; }
+    .usecase-subtitle { font-size: 0.85rem; color: #64748b; }
+    .usecase-steps { margin-top: 16px; }
+    .usecase-step { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+    .usecase-step:last-child { border-bottom: none; }
+    .step-num { width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #475569; flex-shrink: 0; margin-top: 2px; }
+    .step-text { font-size: 14px; }
+    .step-action { color: #2563eb; font-weight: 600; }
+    .step-result { color: #059669; font-style: italic; font-size: 13px; display: block; margin-top: 2px; }
+    .demo-tip { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #92400e; }
+    .demo-tip strong { color: #78350f; }
+
+    /* Env table */
+    .env-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+    .env-table th, .env-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .env-table th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .env-table code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #0f172a; }
+    .env-table .status-ok { color: #059669; font-weight: 600; }
+    .env-table .status-check { color: #d97706; font-weight: 600; }
+    .env-table .status-missing { color: #dc2626; font-weight: 600; }
+
+    /* Progress bar */
+    .progress-bar { background: #e2e8f0; border-radius: 8px; height: 12px; margin: 16px 0; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 8px; transition: width 0.5s ease; }
+    .progress-text { font-size: 14px; font-weight: 600; color: #475569; text-align: center; margin-top: 4px; }
+
+    /* Script section */
+    .script-block { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 20px; margin: 12px 0; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.8; overflow-x: auto; }
+    .script-block .comment { color: #64748b; }
+    .script-block .highlight { color: #60a5fa; }
+    .script-block .string { color: #34d399; }
+
+    /* Print styles */
+    @media print {
+      .tabs { display: none; }
+      .tab-content { display: block !important; page-break-inside: avoid; margin-bottom: 40px; }
+      .header { padding: 20px 0; }
+      body { background: white; }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .tabs { flex-direction: column; }
+      .tab { border-radius: 8px; }
+      .container { padding: 16px 12px; }
+      .tab-content { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ImmoKredit CRM</h1>
+  <p>Go-Live Checkliste & Präsentations-Leitfaden</p>
+  <div class="date" id="dateDisplay"></div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('checklist')">Checkliste</button>
+    <button class="tab" onclick="switchTab('usecases')">Präsentation</button>
+    <button class="tab" onclick="switchTab('env')">Umgebungsvariablen</button>
+    <button class="tab" onclick="switchTab('script')">Demo-Skript</button>
+  </div>
+
+  <!-- ==================== TAB 1: CHECKLIST ==================== -->
+  <div class="tab-content active" id="tab-checklist">
+    <h2>Go-Live Checkliste</h2>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+    <div class="progress-text" id="progressText">0 / 0 erledigt</div>
+
+    <div class="section">
+      <h3>Infrastruktur & Deployment</h3>
+      <ul class="checklist" id="list-infra">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-infra">Infra</span>
+            <div class="check-label">Frontend auf Vercel deployed</div>
+            <div class="check-detail">Build läuft fehlerfrei, Custom Domain konfiguriert</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-infra">Infra</span>
+            <div class="check-label">Backend auf Railway deployed</div>
+            <div class="check-detail">PostgreSQL Datenbank verbunden, prisma db push bei Build</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-infra">Infra</span>
+            <div class="check-label">Custom Domain (immo-kredit.net) konfiguriert</div>
+            <div class="check-detail">DNS bei OnePage.io — Nameserver: ns1.onepage.io, ns2.onepage.io</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-security">Security</span>
+            <div class="check-label">JWT_SECRET gesetzt und sicher</div>
+            <div class="check-detail">Starkes, zufälliges Secret in Railway Environment Variables</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-security">Security</span>
+            <div class="check-label">CORS korrekt eingestellt</div>
+            <div class="check-detail">Nur erlaubte Domains (Frontend-URL, immo-kredit.net)</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Email & SendGrid</h3>
+      <ul class="checklist" id="list-email">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-email">Email</span>
+            <div class="check-label">SendGrid API Key aktiv</div>
+            <div class="check-detail">SENDGRID_API_KEY in Railway gesetzt</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-email">Email</span>
+            <div class="check-label">Domain Authentication (DKIM/SPF) verifiziert</div>
+            <div class="check-detail">DNS CNAME Records bei OnePage.io eingetragen und von SendGrid bestätigt</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-email">Email</span>
+            <div class="check-label">Inbound Parse Webhook aktiv</div>
+            <div class="check-detail">SendGrid → POST /api/documents/inbound — Emails mit Anhängen werden verarbeitet</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-email">Email</span>
+            <div class="check-label">Test-Email gesendet und zugestellt (nicht im Spam)</div>
+            <div class="check-detail">Verschlüsselter Link + Passwort kommen separat an</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-email">Email</span>
+            <div class="check-label">Email-Tracking funktioniert</div>
+            <div class="check-detail">Tracking-Pixel wird geladen, "Gelesen"-Status wird aktualisiert</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Google Drive</h3>
+      <ul class="checklist" id="list-gdrive">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-gdrive">GDrive</span>
+            <div class="check-label">OAuth2 Verbindung aktiv (connected: true)</div>
+            <div class="check-detail">/api/gdrive/check gibt connected: true zurück</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-gdrive">GDrive</span>
+            <div class="check-label">Google Cloud Projekt auf "Production" gestellt</div>
+            <div class="check-detail">Verhindert Ablauf des Refresh Tokens nach 7 Tagen</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-gdrive">GDrive</span>
+            <div class="check-label">Manueller Upload funktioniert (📤 Button)</div>
+            <div class="check-detail">Datei wird in Kundenordner auf Google Drive hochgeladen</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-gdrive">GDrive</span>
+            <div class="check-label">Automatischer Upload (per Email) funktioniert</div>
+            <div class="check-detail">Eingehende Emails mit Anhängen → OCR → Google Drive</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-gdrive">GDrive</span>
+            <div class="check-label">Bilder werden korrekt als PDF konvertiert</div>
+            <div class="check-detail">JPG/PNG → PDF Konvertierung, Download liefert korrekte Datei</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>OCR & Dokumentenverarbeitung</h3>
+      <ul class="checklist" id="list-ocr">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ocr">OCR</span>
+            <div class="check-label">ANTHROPIC_API_KEY gesetzt (Claude Vision)</div>
+            <div class="check-detail">Jeffrey OCR kann Dokumente analysieren</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ocr">OCR</span>
+            <div class="check-label">OCR Analyse funktioniert (Reisepass, Lohnzettel, etc.)</div>
+            <div class="check-detail">Felder werden korrekt erkannt und in Kundendaten übernommen</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ocr">OCR</span>
+            <div class="check-label">Jeffrey Unterlagen-Check funktioniert</div>
+            <div class="check-detail">Zeigt welche Dokumente fehlen und erstellt Erinnerungs-Email</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Pipedrive & CRM</h3>
+      <ul class="checklist" id="list-pipe">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-pipe">CRM</span>
+            <div class="check-label">Pipedrive API Token gesetzt</div>
+            <div class="check-detail">Deals und Stages werden synchronisiert</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-pipe">CRM</span>
+            <div class="check-label">Pipeline-Ansicht synchron mit Pipedrive</div>
+            <div class="check-detail">Deals bewegen sich korrekt zwischen Stages</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-pipe">CRM</span>
+            <div class="check-label">Team-Zuweisung funktioniert (Roland, Slaven, Daniel)</div>
+            <div class="check-detail">Jeder sieht nur seine eigenen Kunden</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Features & UI</h3>
+      <ul class="checklist" id="list-ui">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Login / Logout funktioniert</div>
+            <div class="check-detail">Alle 3 User können sich einloggen</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Dashboard zeigt korrekte Daten</div>
+            <div class="check-detail">Kunden mit offenen Aufgaben, Aktivitäten, Pipeline-Stats</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Kundendetails vollständig editierbar</div>
+            <div class="check-detail">Person, Haushalt, Finanzplan, Objekt — speichern funktioniert</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Archiv-Funktion getestet</div>
+            <div class="check-detail">Archivieren, Wiederherstellen, Abschluss — auf KundePage + Detail</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Verschlüsselter Link + Bank-Versand getestet</div>
+            <div class="check-detail">Beide Versand-Methoden im "Unterlagen versenden" Modal</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Digitale Signatur getestet</div>
+            <div class="check-detail">Signatur-Link erstellen, Kunde unterschreibt, PDF wird gespeichert</div>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <div>
+            <span class="cat-badge cat-ui">UI</span>
+            <div class="check-label">Mobile Ansicht getestet</div>
+            <div class="check-detail">Responsive Design auf Smartphone funktioniert</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: USE CASES ==================== -->
+  <div class="tab-content" id="tab-usecases">
+    <h2>Präsentations-Leitfaden — Use Cases</h2>
+    <p style="color: #64748b; margin-bottom: 24px;">Diese Use Cases zeigen den kompletten Workflow eines Kreditvermittlers — vom ersten Kontakt bis zum Abschluss.</p>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">1</div>
+        <div>
+          <div class="usecase-title">Neuer Lead kommt rein</div>
+          <div class="usecase-subtitle">Automatische Erfassung + Zuweisung</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Kunde füllt Formular auf Website aus</span> (OnePage Funnel)<span class="step-result">→ Lead wird automatisch erstellt mit Kontaktdaten + Kreditwunsch</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">Lead erscheint im Dashboard</span> mit Ampelstatus (Gelb = neu)<span class="step-result">→ Temperatur wird automatisch eingestuft (warm/hot/cold)</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">Lead einem Berater zuweisen</span> (Roland, Slaven oder Daniel)<span class="step-result">→ Berater sieht den Lead in seinem persönlichen Dashboard</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Zeig das Dashboard und wie ein neuer Lead automatisch erscheint. Klick auf den Lead und zeig die Detail-Ansicht.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">2</div>
+        <div>
+          <div class="usecase-title">Dokumente per Email erhalten</div>
+          <div class="usecase-subtitle">Automatische OCR + Kundenordner</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Kunde sendet Dokumente per Email</span> (Reisepass, Lohnzettel, etc.)<span class="step-result">→ Email wird automatisch empfangen und verarbeitet</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">Jeffrey (KI) erkennt Dokumenttyp automatisch</span><span class="step-result">→ "Reisepass erkannt", "Lohnzettel erkannt" — Felder werden extrahiert</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">Dokument landet auf Google Drive</span> im Kundenordner<span class="step-result">→ Nummerierte Ordnerstruktur: "1_Max Mustermann/1. Max Mustermann Reisepass.pdf"</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">4</div>
+          <div class="step-text"><span class="step-action">Kundendaten werden automatisch befüllt</span><span class="step-result">→ Person, Haushalt, Finanzplan — aus OCR extrahierte Felder</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Lade ein Dokument über den 📤 Button hoch. Zeig wie Jeffrey es analysiert und die Felder automatisch befüllt werden. Öffne dann Google Drive und zeig den Kundenordner.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">3</div>
+        <div>
+          <div class="usecase-title">Unterlagen-Check & Erinnerung</div>
+          <div class="usecase-subtitle">Jeffrey prüft Vollständigkeit</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Klick auf "📋 Unterlagen prüfen"</span><span class="step-result">→ Jeffrey zeigt Checkliste: welche Dokumente vorhanden, welche fehlen</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">Ein-Klick Erinnerungs-Email generieren</span><span class="step-result">→ Personalisierte Email an Kunden mit Liste der fehlenden Unterlagen</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Öffne einen Kunden mit ein paar Dokumenten. Klick "Unterlagen prüfen" und zeig die Checkliste. Generiere die Erinnerungs-Email.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">4</div>
+        <div>
+          <div class="usecase-title">Kennzahlen-Berechnung</div>
+          <div class="usecase-subtitle">DSTI, LTV, Immobilienwert — automatisch</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Kundendaten werden erfasst</span> (Einkommen, Kredit, Objekt)<span class="step-result">→ Kennzahlen werden automatisch berechnet</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">DSTI (Schuldendienstquote)</span> — Grün/Gelb/Rot Bewertung<span class="step-result">→ "Ausgezeichnet", "Akzeptabel", "Kritisch" mit Ampel-Farbe</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">LTV (Beleihungsquote)</span> — mit visueller Skala<span class="step-result">→ Zeigt Eigenkapitalquote und Finanzierungsrisiko</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">4</div>
+          <div class="step-text"><span class="step-action">Geschätzter Immobilienwert</span> — basierend auf PLZ, Fläche, Baujahr<span class="step-result">→ Automatische Schätzung wenn kein Kaufpreis vorhanden</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Zeig die Kennzahlen-Karten eines Kunden. Erkläre DSTI und LTV und warum das für die Bankentscheidung wichtig ist.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">5</div>
+        <div>
+          <div class="usecase-title">Unterlagen an Bank senden</div>
+          <div class="usecase-subtitle">Verschlüsselter Link oder PDF-Anhang</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Klick auf "📨 Unterlagen versenden"</span><span class="step-result">→ Modal öffnet sich mit 2 Optionen</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2a</div>
+          <div class="step-text"><span class="step-action">Option A: Verschlüsselter Link</span><span class="step-result">→ Bank erhält 2 separate Emails: Download-Link + Passwort (sicherer)</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2b</div>
+          <div class="step-text"><span class="step-action">Option B: PDF-Anhang</span><span class="step-result">→ Alle Dokumente direkt als Anhang in einer Email (max. 25MB)</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">Email-Tracking zeigt ob Bank die Email geöffnet hat</span><span class="step-result">→ "Gelesen" + Zeitstempel im Email-Verlauf</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Sende einen verschlüsselten Link an deine eigene Email. Zeig die 2 Emails (Link + Passwort). Öffne den Link und lade ein Dokument herunter.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">6</div>
+        <div>
+          <div class="usecase-title">Digitale Signatur</div>
+          <div class="usecase-subtitle">Kunde unterschreibt online</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Klick auf "🔗 Signatur-Link erstellen"</span><span class="step-result">→ Einmaliger, zeitlich begrenzter Link wird generiert</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">Link per WhatsApp oder Email an Kunden senden</span><span class="step-result">→ Kunde öffnet Link auf Handy/Computer</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">Kunde unterschreibt digital</span> (Touch/Maus)<span class="step-result">→ "✅ Digital signiert" erscheint auf der Kundendetailseite</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">4</div>
+          <div class="step-text"><span class="step-action">Unterschrift als PDF gespeichert</span><span class="step-result">→ In Kundendokumenten + Google Drive (unterschrift_kunde_[timestamp].pdf)</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Erstelle einen Signatur-Link, öffne ihn auf deinem Handy und unterschreibe. Geh zurück zur App und zeig den grünen "Digital signiert" Banner.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">7</div>
+        <div>
+          <div class="usecase-title">Pipeline & Deal-Management</div>
+          <div class="usecase-subtitle">Vom Lead zum Abschluss</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Pipeline-Ansicht zeigt alle Deals</span> in Kanban-Stages<span class="step-result">→ Synchronisiert mit Pipedrive CRM</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">Deal zwischen Stages verschieben</span><span class="step-result">→ Unterlagen vollständig → Bank-Anfrage → Warten auf Zusage → Abgeschlossen</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">Kunde archivieren</span> nach Abschluss<span class="step-result">→ Verschwindet aus aktiver Liste, bleibt im Archiv + Datenbank</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Zeig die Pipeline-Ansicht. Erkläre die Stages und wie ein Deal von links nach rechts wandert.</div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-header">
+        <div class="usecase-number">8</div>
+        <div>
+          <div class="usecase-title">Jeffrey KI-Assistent</div>
+          <div class="usecase-subtitle">Chat + OCR + Unterlagen-Check</div>
+        </div>
+      </div>
+      <div class="usecase-steps">
+        <div class="usecase-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><span class="step-action">Jeffrey Chat</span> — Fragen zu Kunden, Deals, Dokumenten stellen<span class="step-result">→ KI kennt alle Daten aus der Datenbank und antwortet auf Deutsch</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><span class="step-action">OCR Analyse</span> — Dokumente automatisch auswerten<span class="step-result">→ Erkennt Dokumenttyp, extrahiert Felder mit Konfidenz-Score</span></div>
+        </div>
+        <div class="usecase-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><span class="step-action">Unterlagen-Check</span> — Vollständigkeitsprüfung<span class="step-result">→ Fehlende Dokumente identifizieren + Erinnerung generieren</span></div>
+        </div>
+      </div>
+      <div class="demo-tip"><strong>Demo-Tipp:</strong> Zeig alle 3 Jeffrey-Funktionen nacheinander. Am beeindruckendsten ist die OCR: lade einen Reisepass hoch und zeig wie die Felder automatisch extrahiert werden.</div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: ENV VARIABLES ==================== -->
+  <div class="tab-content" id="tab-env">
+    <h2>Umgebungsvariablen — Railway Backend</h2>
+    <p style="color: #64748b; margin-bottom: 20px;">Alle benötigten Environment Variables für das Backend auf Railway.</p>
+
+    <table class="env-table">
+      <thead>
+        <tr><th>Variable</th><th>Beschreibung</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>DATABASE_URL</code></td><td>PostgreSQL Connection String</td><td class="status-ok">✅ Railway Auto</td></tr>
+        <tr><td><code>JWT_SECRET</code></td><td>Geheimschlüssel für Token-Signierung</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>PORT</code></td><td>Server Port (default: 4000)</td><td class="status-ok">✅ Railway Auto</td></tr>
+        <tr><td><code>NODE_ENV</code></td><td>production</td><td class="status-ok">✅</td></tr>
+        <tr><td colspan="3" style="background: #f0f9ff; font-weight: 600; color: #1d4ed8;">SendGrid</td></tr>
+        <tr><td><code>SENDGRID_API_KEY</code></td><td>API Key für Email-Versand</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>SENDGRID_FROM_EMAIL</code></td><td>Standard-Absender (info@immo-kredit.net)</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>SENDGRID_FROM_NAME</code></td><td>Absender-Name (ImmoKredit)</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>BACKEND_URL</code></td><td>Backend URL für Tracking-Pixel + Webhooks</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>FRONTEND_URL</code></td><td>Frontend URL für Secure-Links</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td colspan="3" style="background: #f0fdf4; font-weight: 600; color: #059669;">Google Drive</td></tr>
+        <tr><td><code>GOOGLE_DRIVE_CLIENT_ID</code></td><td>OAuth2 Client ID</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>GOOGLE_DRIVE_CLIENT_SECRET</code></td><td>OAuth2 Client Secret</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>GOOGLE_DRIVE_REFRESH_TOKEN</code></td><td>Refresh Token (läuft ab wenn "Testing"!)</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>GOOGLE_DRIVE_FOLDER_ID</code></td><td>Root-Ordner ID (1aQ8is6b1cqt...)</td><td class="status-ok">✅</td></tr>
+        <tr><td colspan="3" style="background: #f5f3ff; font-weight: 600; color: #6d28d9;">KI & APIs</td></tr>
+        <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Claude API für OCR (Jeffrey)</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>OPENAI_API_KEY</code></td><td>GPT-4o-mini für Jeffrey Chat</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td colspan="3" style="background: #fef3c7; font-weight: 600; color: #b45309;">Pipedrive</td></tr>
+        <tr><td><code>PIPEDRIVE_API_TOKEN</code></td><td>Pipedrive API Token</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td><code>PIPEDRIVE_BASE_URL</code></td><td>https://api.pipedrive.com/v1</td><td class="status-ok">✅ Default</td></tr>
+        <tr><td><code>PIPEDRIVE_ZUSTAENDIG_FIELD_KEY</code></td><td>Custom Field für Zuständigkeit</td><td class="status-check">⚠️ Prüfen</td></tr>
+        <tr><td colspan="3" style="background: #fce4ec; font-weight: 600; color: #c62828;">Optional</td></tr>
+        <tr><td><code>VAPI_API_KEY</code></td><td>Voice Agent (VAPI.ai) — optional</td><td class="status-check">⚠️ Optional</td></tr>
+        <tr><td><code>VAPI_PHONE_ID</code></td><td>Anrufer-Telefonnummer — optional</td><td class="status-check">⚠️ Optional</td></tr>
+        <tr><td><code>N8N_WEBHOOK_URL</code></td><td>n8n Workflow Webhook — optional</td><td class="status-check">⚠️ Optional</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== TAB 4: DEMO SCRIPT ==================== -->
+  <div class="tab-content" id="tab-script">
+    <h2>Demo-Skript — Schritt für Schritt</h2>
+    <p style="color: #64748b; margin-bottom: 24px;">Empfohlener Ablauf für eine 15-20 Minuten Go-Live Präsentation.</p>
+
+    <div class="section">
+      <h3>Vorbereitung (5 Min vor der Demo)</h3>
+      <ul style="list-style: disc; padding-left: 24px; color: #475569; font-size: 14px; line-height: 2;">
+        <li>App öffnen und einloggen</li>
+        <li>Ein Test-Dokument bereithalten (z.B. Reisepass-Foto, Lohnzettel-PDF)</li>
+        <li>Google Drive Ordner in separatem Tab öffnen</li>
+        <li>Eigene Email-Inbox in separatem Tab öffnen (für Secure-Link Demo)</li>
+        <li>Handy bereithalten (für Signatur-Demo)</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Ablauf der Präsentation</h3>
+
+      <h4>1. Dashboard & Überblick (2 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Zeige das Dashboard</span><br>
+        <span class="highlight">→ "Das ist unser zentrales Dashboard."</span><br>
+        <span class="highlight">→ "Hier sehe ich meine Kunden mit offenen Aufgaben."</span><br>
+        <span class="highlight">→ "Die Checkboxen zeigen mir sofort welche Daten fehlen."</span><br>
+        <span class="highlight">→ "Oben rechts: Aktivitäten von heute."</span>
+      </div>
+
+      <h4>2. Neuen Kunden anlegen & Dokument hochladen (4 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Gehe zu einem bestehenden Kunden oder lege einen neuen an</span><br>
+        <span class="highlight">→ "Hier ist unser Kunde. Ich lade jetzt ein Dokument hoch."</span><br>
+        <span class="comment">// Klick auf 📤 Hochladen, wähle Datei</span><br>
+        <span class="highlight">→ "Jeffrey erkennt automatisch um was es sich handelt."</span><br>
+        <span class="comment">// Klick auf 🔍 OCR Analysieren</span><br>
+        <span class="highlight">→ "Die Daten werden direkt in die Kundenfelder übernommen."</span><br>
+        <span class="comment">// Zeige Person/Haushalt Felder</span><br>
+        <span class="highlight">→ "Und das Dokument ist jetzt auch auf Google Drive."</span><br>
+        <span class="comment">// Wechsle zum Google Drive Tab</span>
+      </div>
+
+      <h4>3. Unterlagen prüfen & Erinnerung (2 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Klick auf 📋 Unterlagen prüfen</span><br>
+        <span class="highlight">→ "Jeffrey prüft welche Unterlagen noch fehlen."</span><br>
+        <span class="highlight">→ "Mit einem Klick generiere ich eine Erinnerungs-Email."</span><br>
+        <span class="highlight">→ "Der Kunde bekommt eine Liste was noch ausständig ist."</span>
+      </div>
+
+      <h4>4. Kennzahlen zeigen (2 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Scrolle zu den Kennzahlen</span><br>
+        <span class="highlight">→ "Hier berechnet die App automatisch die Schlüsselzahlen."</span><br>
+        <span class="highlight">→ "DSTI zeigt mir die Schuldendienstquote — hier grün, also alles ok."</span><br>
+        <span class="highlight">→ "LTV zeigt die Beleihungsquote — wichtig für die Bank."</span><br>
+        <span class="highlight">→ "Der geschätzte Immobilienwert wird aus PLZ und Fläche berechnet."</span>
+      </div>
+
+      <h4>5. Unterlagen an Bank senden (3 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Klick auf 📨 Unterlagen versenden</span><br>
+        <span class="highlight">→ "Zwei Optionen: Verschlüsselter Link oder PDF-Anhang."</span><br>
+        <span class="highlight">→ "Der verschlüsselte Link ist sicherer — 2 separate Emails."</span><br>
+        <span class="comment">// Sende an eigene Email-Adresse</span><br>
+        <span class="highlight">→ "Schauen wir in die Inbox..."</span><br>
+        <span class="comment">// Zeige die 2 Emails (Link + Passwort)</span><br>
+        <span class="highlight">→ "Der Bankberater gibt das Passwort ein und kann die Dokumente downloaden."</span>
+      </div>
+
+      <h4>6. Digitale Signatur (3 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Klick auf 🔗 Signatur-Link erstellen</span><br>
+        <span class="highlight">→ "Ich erstelle einen Signatur-Link für den Kunden."</span><br>
+        <span class="comment">// Kopiere Link und öffne auf Handy</span><br>
+        <span class="highlight">→ "Der Kunde öffnet den Link und unterschreibt."</span><br>
+        <span class="comment">// Unterschreibe auf Handy, gehe zurück zur App</span><br>
+        <span class="highlight">→ "Die Unterschrift wird als PDF gespeichert — im System und auf Google Drive."</span>
+      </div>
+
+      <h4>7. Pipeline & Archiv (2 Min)</h4>
+      <div class="script-block">
+        <span class="comment">// Gehe zur Pipeline-Ansicht</span><br>
+        <span class="highlight">→ "In der Pipeline sehe ich alle Deals — synchronisiert mit Pipedrive."</span><br>
+        <span class="highlight">→ "Wenn der Deal abgeschlossen ist, archiviere ich den Kunden."</span><br>
+        <span class="comment">// Zeige Archiv-Menüpunkt</span><br>
+        <span class="highlight">→ "Im Archiv kann ich jederzeit wieder darauf zugreifen."</span>
+      </div>
+
+      <h4>8. Abschluss & Fragen (2 Min)</h4>
+      <div class="script-block">
+        <span class="highlight">→ "Das war der komplette Workflow: Lead → Dokumente → Analyse → Bank → Signatur → Abschluss."</span><br>
+        <span class="highlight">→ "Alles an einem Ort, alles automatisiert."</span><br>
+        <span class="highlight">→ "Fragen?"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    event.target.classList.add('active');
+    saveState();
+  }
+
+  // Checklist toggle
+  function toggleCheck(li) {
+    li.classList.toggle('checked');
+    updateProgress();
+    saveState();
+  }
+
+  // Progress bar
+  function updateProgress() {
+    const all = document.querySelectorAll('.checklist li');
+    const checked = document.querySelectorAll('.checklist li.checked');
+    const pct = all.length > 0 ? Math.round((checked.length / all.length) * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = checked.length + ' / ' + all.length + ' erledigt (' + pct + '%)';
+  }
+
+  // Persist state in localStorage
+  function saveState() {
+    const state = {
+      checked: [],
+      activeTab: document.querySelector('.tab.active')?.textContent?.trim(),
+    };
+    document.querySelectorAll('.checklist li').forEach((li, i) => {
+      if (li.classList.contains('checked')) state.checked.push(i);
+    });
+    localStorage.setItem('immokredit_golive', JSON.stringify(state));
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem('immokredit_golive');
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (state.checked) {
+        const items = document.querySelectorAll('.checklist li');
+        state.checked.forEach(i => { if (items[i]) items[i].classList.add('checked'); });
+      }
+      if (state.activeTab) {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(t => {
+          if (t.textContent.trim() === state.activeTab) {
+            t.click();
+          }
+        });
+      }
+    } catch (e) {}
+  }
+
+  // Date
+  document.getElementById('dateDisplay').textContent = 'Stand: ' + new Date().toLocaleDateString('de-AT', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  // Init
+  loadState();
+  updateProgress();
+</script>
+
+</body>
+</html>
