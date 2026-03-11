@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { SignaturePad } from '@/components/Signature/SignaturePad';
+import { JeffreyModal } from '@/components/Leads/JeffreyModal';
 import './KundePage.css';
 
 interface KundeOverview {
@@ -106,6 +107,8 @@ export const KundeDetailPage: React.FC = () => {
   const [signatureStatus, setSignatureStatus] = useState<{ signed: boolean; signatures: any[] }>({ signed: false, signatures: [] });
   const [secureLinkSent, setSecureLinkSent] = useState(false);
   const [sendingSecureLink, setSendingSecureLink] = useState(false);
+  const [secureLinkEmail, setSecureLinkEmail] = useState('');
+  const [showJeffreyCheck, setShowJeffreyCheck] = useState(false);
 
   useEffect(() => {
     if (leadId) {
@@ -169,8 +172,12 @@ export const KundeDetailPage: React.FC = () => {
     if (!leadId) return;
     setSendingSecureLink(true);
     try {
-      await api.post('/secure-link/create', { leadId });
+      await api.post('/secure-link/create', {
+        leadId,
+        recipientEmail: secureLinkEmail.trim() || undefined,
+      });
       setSecureLinkSent(true);
+      toast.success(`Link + Passwort an ${secureLinkEmail.trim() || kunde.email} gesendet`);
       loadEmailHistory();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Fehler beim Erstellen des Links');
@@ -235,17 +242,25 @@ export const KundeDetailPage: React.FC = () => {
             <span className="jeffrey-title">Jeffrey</span>
             <span className="jeffrey-desc">{docCount} Dokument{docCount !== 1 ? 'e' : ''}</span>
           </div>
-          <button
-            className={`jeffrey-btn ${analyzing ? 'analyzing' : ''}`}
-            onClick={runJeffreyOCR}
-            disabled={analyzing || docCount === 0}
-          >
-            {analyzing ? (
-              <><span className="jeffrey-spinner">⏳</span> Analysiere...</>
-            ) : (
-              <>🔍 Analysieren</>
-            )}
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="jeffrey-btn"
+              onClick={() => setShowJeffreyCheck(true)}
+            >
+              📋 Unterlagen prüfen
+            </button>
+            <button
+              className={`jeffrey-btn ${analyzing ? 'analyzing' : ''}`}
+              onClick={runJeffreyOCR}
+              disabled={analyzing || docCount === 0}
+            >
+              {analyzing ? (
+                <><span className="jeffrey-spinner">⏳</span> Analysiere...</>
+              ) : (
+                <>🔍 OCR Analysieren</>
+              )}
+            </button>
+          </div>
         </div>
         {ocrResults && ocrResults.length > 0 && (
           <div className="jeffrey-results">
@@ -456,11 +471,31 @@ export const KundeDetailPage: React.FC = () => {
 
       {/* Digital Signature Section — show from UNTERLAGEN_VOLLSTAENDIG onwards */}
       {dealStage && ['UNTERLAGEN_VOLLSTAENDIG', 'BANK_ANFRAGE', 'WARTEN_AUF_ZUSAGE', 'ZUSAGE_ERHALTEN', 'ABGESCHLOSSEN'].includes(dealStage) && !signatureStatus.signed && (
-        <SignaturePad
-          leadId={leadId!}
-          signerName={`${kunde.firstName} ${kunde.lastName}`}
-          onSigned={() => loadSignatureStatus()}
-        />
+        <>
+          <SignaturePad
+            leadId={leadId!}
+            signerName={`${kunde.firstName} ${kunde.lastName}`}
+            onSigned={() => loadSignatureStatus()}
+          />
+          <div style={{ marginTop: '12px', textAlign: 'center' }}>
+            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '8px' }}>Oder senden Sie dem Kunden einen Signatur-Link:</p>
+            <button
+              className="btn btn-secondary"
+              onClick={async () => {
+                try {
+                  const res = await api.post('/signature/create-link', { leadId });
+                  const url = res.data.signatureUrl;
+                  await navigator.clipboard.writeText(url);
+                  toast.success('Signatur-Link kopiert!');
+                } catch (err: any) {
+                  toast.error(err.response?.data?.error || 'Fehler beim Erstellen');
+                }
+              }}
+            >
+              &#128279; Signatur-Link erstellen & kopieren
+            </button>
+          </div>
+        </>
       )}
 
       {signatureStatus.signed && (
@@ -489,13 +524,23 @@ export const KundeDetailPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={handleSendSecureLink}
-            disabled={sendingSecureLink || secureLinkSent}
-          >
-            {sendingSecureLink ? '⏳ Wird erstellt...' : secureLinkSent ? '✅ Link gesendet' : '📨 Link + Passwort senden'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="email"
+              placeholder={kunde.email || 'Email-Adresse'}
+              value={secureLinkEmail}
+              onChange={(e) => setSecureLinkEmail(e.target.value)}
+              disabled={sendingSecureLink || secureLinkSent}
+              style={{ flex: 1, minWidth: '200px', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px' }}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={handleSendSecureLink}
+              disabled={sendingSecureLink || secureLinkSent}
+            >
+              {sendingSecureLink ? '⏳ Wird erstellt...' : secureLinkSent ? '✅ Link gesendet' : '📨 Senden'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -536,6 +581,18 @@ export const KundeDetailPage: React.FC = () => {
           </div>
         </>
       )}
+      {/* Jeffrey Unterlagen-Check Modal */}
+      <JeffreyModal
+        isOpen={showJeffreyCheck}
+        lead={kunde ? {
+          id: kunde.id,
+          firstName: kunde.firstName,
+          lastName: kunde.lastName,
+          email: kunde.email,
+          phone: kunde.phone,
+        } as any : null}
+        onClose={() => setShowJeffreyCheck(false)}
+      />
     </div>
   );
 };

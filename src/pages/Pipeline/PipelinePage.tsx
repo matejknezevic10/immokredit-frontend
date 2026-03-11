@@ -324,6 +324,20 @@ export const PipelinePage: React.FC = () => {
                           </div>
                         )}
 
+                        {deal.lead && (deal.lead.ampelStatus !== 'YELLOW' || deal.lead.temperatur !== 'WARM' || deal.lead.score > 0) && (
+                          <div className="deal-card-indicators">
+                            <span className="deal-indicator">
+                              {deal.lead.ampelStatus === 'GREEN' ? '🟢' : deal.lead.ampelStatus === 'RED' ? '🔴' : '🟡'}
+                            </span>
+                            <span className="deal-indicator">
+                              {deal.lead.temperatur === 'HOT' ? '🔥' : deal.lead.temperatur === 'COLD' ? '❄️' : '🌤'}
+                            </span>
+                            {deal.lead.score > 0 && (
+                              <span className="deal-indicator deal-score">{deal.lead.score}%</span>
+                            )}
+                          </div>
+                        )}
+
                         {/* Action buttons for specific stages */}
                         {deal.leadId && (
                           <div className="deal-card-actions">

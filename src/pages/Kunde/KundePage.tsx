@@ -77,11 +77,29 @@ export const KundePage: React.FC = () => {
   );
 
   const getCompletionDots = (k: Kunde) => [
-    { label: 'Person', done: k.hasPersonData },
-    { label: 'Haushalt', done: k.hasHaushaltData },
-    { label: 'Finanzplan', done: k.hasFinanzplanData },
-    { label: 'Objekt', done: k.objekteCount > 0 },
+    { label: 'Person', section: 'person', done: k.hasPersonData },
+    { label: 'Haushalt', section: 'haushalt', done: k.hasHaushaltData },
+    { label: 'Finanzplan', section: 'finanzplan', done: k.hasFinanzplanData },
+    { label: 'Objekt', section: 'objekt', done: k.objekteCount > 0 },
   ];
+
+  const toggleCompletion = async (kundeId: string, section: string, currentValue: boolean) => {
+    try {
+      await api.patch(`/kunde/${kundeId}/completion`, { section, value: !currentValue });
+      // Update local state
+      setKunden(prev => prev.map(k => {
+        if (k.id !== kundeId) return k;
+        const updated = { ...k };
+        if (section === 'person') updated.hasPersonData = !currentValue;
+        if (section === 'haushalt') updated.hasHaushaltData = !currentValue;
+        if (section === 'finanzplan') updated.hasFinanzplanData = !currentValue;
+        if (section === 'objekt') updated.objekteCount = !currentValue ? 1 : 0;
+        return updated;
+      }));
+    } catch (err) {
+      console.error('Failed to toggle completion:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -135,7 +153,16 @@ export const KundePage: React.FC = () => {
 
             <div className="kunde-card-completion">
               {getCompletionDots(k).map((dot, i) => (
-                <div key={i} className={`completion-dot ${dot.done ? 'done' : ''}`}>
+                <div
+                  key={i}
+                  className={`completion-dot ${dot.done ? 'done' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCompletion(k.id, dot.section, dot.done);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  title={`Klicken um ${dot.label} als ${dot.done ? 'offen' : 'erledigt'} zu markieren`}
+                >
                   <span className="completion-indicator">{dot.done ? '✅' : '⬜'}</span>
                   <span className="completion-label">{dot.label}</span>
                 </div>

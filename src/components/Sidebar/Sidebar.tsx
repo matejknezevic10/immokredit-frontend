@@ -22,7 +22,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
       { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/' },
       { id: 'pipeline', label: 'Pipeline', icon: '🎯', path: '/pipeline', badgeKey: 'activeDeals' },
       { id: 'leads', label: 'Leads', icon: '👥', path: '/leads', badgeKey: 'totalLeads' },
-      { id: 'documents', label: 'Dokumente', icon: '📄', path: '/documents', badgeKey: 'totalDocuments' },
+      { id: 'documents', label: 'Dokumente', icon: '📄', path: '/documents', badgeKey: undefined },
     ],
   },
   {
@@ -51,7 +51,7 @@ const mobileNavItems: NavItem[] = [
   { id: 'dashboard', label: 'Home', icon: '📊', path: '/' },
   { id: 'pipeline', label: 'Pipeline', icon: '🎯', path: '/pipeline', badgeKey: 'activeDeals' },
   { id: 'leads', label: 'Leads', icon: '👥', path: '/leads', badgeKey: 'totalLeads' },
-  { id: 'documents', label: 'Docs', icon: '📄', path: '/documents', badgeKey: 'totalDocuments' },
+  { id: 'documents', label: 'Docs', icon: '📄', path: '/documents', badgeKey: undefined },
   { id: 'kunde', label: 'Kunde', icon: '🧑‍💼', path: '/kunde' },
 ];
 

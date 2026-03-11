@@ -5,6 +5,7 @@ import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
 import { ArraySection, ArrayColumn } from '@/components/ArraySection';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import './KundeForm.css';
 
 // ── Validation helpers ──
@@ -65,16 +66,24 @@ export const KundeHaushaltPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const [data, setData] = useState<any>({});
+  const [savedData, setSavedData] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  const isDirty = !loading && JSON.stringify(data) !== savedData;
+  useUnsavedChanges(isDirty);
+
   useEffect(() => { if (leadId) load(); }, [leadId]);
 
   const load = async () => {
-    try { const res = await api.get(`/kunde/${leadId}/haushalt`); setData(res.data); }
+    try {
+      const res = await api.get(`/kunde/${leadId}/haushalt`);
+      setData(res.data);
+      setSavedData(JSON.stringify(res.data));
+    }
     catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -107,6 +116,7 @@ export const KundeHaushaltPage: React.FC = () => {
       // Strip system fields + legacy flat fields (we send einkommen[] directly now)
       const { id, leadId: _, createdAt, updatedAt, nettoverdienst, sonstigeEinkuenfte, ...fields } = data;
       await api.put(`/kunde/${leadId}/haushalt`, fields);
+      setSavedData(JSON.stringify(data));
       setSaved(true);
       toast.success('Haushaltsdaten gespeichert');
       setTimeout(() => setSaved(false), 2000);

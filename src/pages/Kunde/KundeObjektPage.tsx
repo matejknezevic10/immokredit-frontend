@@ -5,16 +5,21 @@ import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
 import { TagInput } from '@/components/TagInput';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import './KundeForm.css';
 
 export const KundeObjektPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const [objekte, setObjekte] = useState<any[]>([]);
+  const [savedObjekte, setSavedObjekte] = useState<string>('');
   const [activeIdx, setActiveIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const isDirty = !loading && JSON.stringify(objekte) !== savedObjekte;
+  useUnsavedChanges(isDirty);
 
   useEffect(() => { if (leadId) load(); }, [leadId]);
 
@@ -24,8 +29,10 @@ export const KundeObjektPage: React.FC = () => {
       if (res.data.length === 0) {
         const newObj = await api.post(`/kunde/${leadId}/objekte`, {});
         setObjekte([newObj.data]);
+        setSavedObjekte(JSON.stringify([newObj.data]));
       } else {
         setObjekte(res.data);
+        setSavedObjekte(JSON.stringify(res.data));
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -42,6 +49,7 @@ export const KundeObjektPage: React.FC = () => {
       const updated = [...objekte];
       updated[activeIdx] = res.data;
       setObjekte(updated);
+      setSavedObjekte(JSON.stringify(updated));
       setSaved(true);
       toast.success('Objektdaten gespeichert');
       setTimeout(() => setSaved(false), 2000);

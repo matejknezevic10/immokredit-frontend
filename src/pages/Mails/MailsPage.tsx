@@ -3,37 +3,28 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
 import './MailsPage.css';
 
-interface EmailEntry {
+interface InboxEmail {
   id: string;
-  to: string;
+  from: string;
   subject: string;
-  emailType: string;
-  sentBy: string | null;
-  sentAt: string;
-  status: string;
-  openedAt: string | null;
-  openCount: number;
-  lastOpenedAt: string | null;
+  receivedAt: string;
+  attachments: { filename: string; type: string }[];
   leadId?: string;
   leadName?: string;
 }
 
-type FilterKey = 'all' | 'sent' | 'opened' | 'failed';
-
 export const MailsPage = () => {
-  const [emails, setEmails] = useState<EmailEntry[]>([]);
+  const [emails, setEmails] = useState<InboxEmail[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
 
-  const loadEmails = useCallback(async () => {
+  const loadInbox = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/email/history');
-      const data = res.data;
-      setEmails(Array.isArray(data) ? data : data.emails || []);
+      const res = await api.get('/email/inbox');
+      setEmails(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error('Failed to load emails:', err);
+      console.error('Failed to load inbox:', err);
       setEmails([]);
     } finally {
       setLoading(false);
@@ -41,27 +32,17 @@ export const MailsPage = () => {
   }, []);
 
   useEffect(() => {
-    loadEmails();
-  }, [loadEmails]);
+    loadInbox();
+  }, [loadInbox]);
 
-  // Stats
-  const totalSent = emails.length;
-  const totalOpened = emails.filter(e => e.status === 'opened').length;
-  const totalFailed = emails.filter(e => e.status === 'failed').length;
-  const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0;
-
-  // Filter & search
   const filteredEmails = emails.filter(e => {
-    if (filter !== 'all' && e.status !== filter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        (e.to || '').toLowerCase().includes(q) ||
-        (e.subject || '').toLowerCase().includes(q) ||
-        (e.leadName || '').toLowerCase().includes(q)
-      );
-    }
-    return true;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      (e.from || '').toLowerCase().includes(q) ||
+      (e.subject || '').toLowerCase().includes(q) ||
+      (e.leadName || '').toLowerCase().includes(q)
+    );
   });
 
   const formatDate = (dateStr: string) => {
@@ -71,47 +52,31 @@ export const MailsPage = () => {
     });
   };
 
-  const getEmailTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      secure_link: 'Secure Download Link',
-      password: 'Passwort-Email',
-      welcome: 'Willkommen',
-      notification: 'Benachrichtigung',
-      document_ready: 'Dokument bereit',
-    };
-    return types[type] || type || 'E-Mail';
-  };
-
   return (
     <div className="mails-page">
       <div className="mails-header">
-        <h1 className="mails-title">Mails</h1>
+        <h1 className="mails-title">Posteingang</h1>
         <p className="mails-subtitle">
-          E-Mail-Verlauf & Tracking-Übersicht
+          Eingegangene E-Mails mit Dokumenten
         </p>
       </div>
 
       {/* Stats */}
       <div className="mails-stats">
         <div className="mails-stat-card">
-          <div className="mails-stat-icon">📧</div>
-          <div className="mails-stat-value">{totalSent}</div>
-          <div className="mails-stat-label">Gesendet</div>
+          <div className="mails-stat-icon">📨</div>
+          <div className="mails-stat-value">{emails.length}</div>
+          <div className="mails-stat-label">Eingegangen</div>
         </div>
         <div className="mails-stat-card">
-          <div className="mails-stat-icon">📬</div>
-          <div className="mails-stat-value">{totalOpened}</div>
-          <div className="mails-stat-label">Gelesen</div>
+          <div className="mails-stat-icon">📎</div>
+          <div className="mails-stat-value">{emails.reduce((sum, e) => sum + e.attachments.length, 0)}</div>
+          <div className="mails-stat-label">Anhänge</div>
         </div>
         <div className="mails-stat-card">
-          <div className="mails-stat-icon">📊</div>
-          <div className="mails-stat-value">{openRate}%</div>
-          <div className="mails-stat-label">Öffnungsrate</div>
-        </div>
-        <div className="mails-stat-card">
-          <div className="mails-stat-icon">❌</div>
-          <div className="mails-stat-value">{totalFailed}</div>
-          <div className="mails-stat-label">Fehlgeschlagen</div>
+          <div className="mails-stat-icon">👤</div>
+          <div className="mails-stat-value">{emails.filter(e => e.leadName).length}</div>
+          <div className="mails-stat-label">Zugeordnet</div>
         </div>
       </div>
 
@@ -121,26 +86,17 @@ export const MailsPage = () => {
           <span className="mails-search-icon">🔍</span>
           <input
             className="mails-search-input"
-            placeholder="Suchen nach Empfänger, Betreff..."
+            placeholder="Suchen nach Absender, Betreff, Kunde..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div className="mails-divider" />
-        {([
-          { key: 'all', label: 'Alle' },
-          { key: 'sent', label: '📧 Gesendet' },
-          { key: 'opened', label: '📬 Gelesen' },
-          { key: 'failed', label: '❌ Fehler' },
-        ] as { key: FilterKey; label: string }[]).map(f => (
-          <button
-            key={f.key}
-            className={`mails-filter-chip ${filter === f.key ? 'active' : ''}`}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
+        <button
+          className="mails-filter-chip active"
+          onClick={loadInbox}
+        >
+          🔄 Aktualisieren
+        </button>
       </div>
 
       {/* Email List */}
@@ -148,7 +104,7 @@ export const MailsPage = () => {
         {loading ? (
           <div className="mails-loading">
             <div className="mails-loading-icon">⏳</div>
-            <div>Lade E-Mails...</div>
+            <div>Lade Posteingang...</div>
           </div>
         ) : filteredEmails.length === 0 ? (
           <div className="mails-empty">
@@ -156,48 +112,38 @@ export const MailsPage = () => {
               {emails.length === 0 ? '📭' : '🔍'}
             </div>
             <div className="mails-empty-title">
-              {emails.length === 0 ? 'Noch keine E-Mails gesendet' : 'Keine Ergebnisse'}
+              {emails.length === 0 ? 'Posteingang ist leer' : 'Keine Ergebnisse'}
             </div>
             <div className="mails-empty-desc">
               {emails.length === 0
-                ? 'E-Mails werden automatisch getrackt sobald sie über das System versendet werden'
-                : 'Versuche einen anderen Suchbegriff oder Filter'}
+                ? 'Eingegangene E-Mails mit Dokumenten werden hier angezeigt'
+                : 'Versuche einen anderen Suchbegriff'}
             </div>
           </div>
         ) : (
           filteredEmails.map(email => (
             <div key={email.id} className="mail-item">
-              <div className={`mail-icon ${email.status}`}>
-                {email.status === 'opened' ? '📬' : email.status === 'failed' ? '❌' : '📧'}
-              </div>
+              <div className="mail-icon sent">📨</div>
               <div className="mail-content">
-                <div className="mail-subject">{email.subject || 'Kein Betreff'}</div>
+                <div className="mail-subject">{email.subject}</div>
                 <div className="mail-meta">
-                  <span className="mail-recipient">An: {email.to}</span>
-                  <span className="mail-meta-sep">·</span>
-                  <span>{getEmailTypeLabel(email.emailType)}</span>
+                  <span className="mail-recipient">Von: {email.from}</span>
                   {email.leadName && (
                     <>
                       <span className="mail-meta-sep">·</span>
                       <span>Kunde: {email.leadName}</span>
                     </>
                   )}
+                  {email.attachments.length > 0 && (
+                    <>
+                      <span className="mail-meta-sep">·</span>
+                      <span>📎 {email.attachments.length} Anhang{email.attachments.length > 1 ? 'e' : ''}</span>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="mail-right">
-                <span className={`mail-badge ${email.status}`}>
-                  {email.status === 'opened'
-                    ? `Gelesen${email.openCount > 1 ? ` (${email.openCount}x)` : ''}`
-                    : email.status === 'failed'
-                      ? 'Fehler'
-                      : 'Gesendet'}
-                </span>
-                <span className="mail-time">{formatDate(email.sentAt)}</span>
-                {email.openedAt && (
-                  <span className="mail-open-count">
-                    Geöffnet: {formatDate(email.openedAt)}
-                  </span>
-                )}
+                <span className="mail-time">{formatDate(email.receivedAt)}</span>
               </div>
             </div>
           ))

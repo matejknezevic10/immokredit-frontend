@@ -10,6 +10,7 @@ interface LeadsTableProps {
   onJeffrey?: (lead: Lead) => void;
   onVoiceAgent?: (lead: Lead) => void;
   onConvertToEigenkunde?: (lead: Lead) => void;
+  onAssign?: (lead: Lead) => void;
 }
 
 const getAmpelEmoji = (status: string) => {
@@ -48,7 +49,7 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete, onJeffrey, onVoiceAgent, onConvertToEigenkunde }) => {
+export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete, onJeffrey, onVoiceAgent, onConvertToEigenkunde, onAssign }) => {
   if (leads.length === 0) {
     return (
       <div className="empty-state">
@@ -68,6 +69,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete,
             <th>E-Mail</th>
             <th>Telefon</th>
             <th>Quelle</th>
+            <th>Zuständig</th>
             <th>Betrag</th>
             <th>Status</th>
             <th>Score</th>
@@ -85,6 +87,22 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onEdit, onDelete,
               <td>{lead.phone}</td>
               <td>
                 <span className="source-badge">{lead.source}</span>
+              </td>
+              <td>
+                {lead.assignedTo ? (
+                  <span className="source-badge" style={{ background: '#dbeafe', color: '#1d4ed8' }}>{lead.assignedTo.name}</span>
+                ) : onAssign ? (
+                  <button
+                    className="btn-icon"
+                    onClick={() => onAssign(lead)}
+                    title="Lead übernehmen"
+                    style={{ fontSize: '12px', padding: '2px 8px', border: '1px dashed #cbd5e1', borderRadius: '6px', background: 'none', cursor: 'pointer', color: '#64748b' }}
+                  >
+                    + Zuweisen
+                  </button>
+                ) : (
+                  <span style={{ color: '#94a3b8' }}>—</span>
+                )}
               </td>
               <td className="lead-amount">{formatCurrency(lead.amount)}</td>
               <td>

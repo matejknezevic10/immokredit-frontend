@@ -15,6 +15,7 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -58,8 +59,21 @@ export default function DocumentsPage() {
     fetchDocuments(pagination.page);
   };
 
-  // Filter documents by search term (client-side)
+  // Filter documents by search term + date (client-side)
   const filteredDocs = documents.filter(d => {
+    // Date filter
+    if (dateFilter !== 'all' && d.created_at) {
+      const docDate = new Date(d.created_at);
+      const now = new Date();
+      if (dateFilter === 'heute') {
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (docDate < today) return false;
+      } else if (dateFilter === 'woche') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        if (docDate < weekAgo) return false;
+      }
+    }
+    // Search filter
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
@@ -166,6 +180,20 @@ export default function DocumentsPage() {
           <option value="grundbuchauszug">📜 Grundbuch</option>
           <option value="sonstiges">📄 Sonstiges</option>
         </select>
+        <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
+        {[
+          { key: 'all', label: 'Alle' },
+          { key: 'heute', label: 'Heute' },
+          { key: 'woche', label: 'Diese Woche' },
+        ].map(f => (
+          <button
+            key={f.key}
+            onClick={() => setDateFilter(f.key)}
+            style={dateFilter === f.key ? { ...styles.filterChip, ...styles.filterChipActive } : styles.filterChip}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* Documents Table */}

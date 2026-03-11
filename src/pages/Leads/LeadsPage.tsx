@@ -6,7 +6,7 @@ import { CreateLeadModal } from '@/components/Leads/CreateLeadModal';
 import { EditLeadModal } from '@/components/Leads/EditLeadModal';
 import { JeffreyModal } from '@/components/Leads/JeffreyModal';
 import { Lead, CreateLeadDto, UpdateLeadDto } from '@/types';
-// import api from '@/services/api'; // Voice Agent deaktiviert
+import api from '@/services/api';
 import toast from 'react-hot-toast';
 import './LeadsPage.css';
 
@@ -60,6 +60,16 @@ export const LeadsPage: React.FC = () => {
 
   const handleConvertClick = (lead: Lead) => {
     setLeadToConvert(lead);
+  };
+
+  const handleAssign = async (lead: Lead) => {
+    try {
+      await api.patch(`/leads/${lead.id}`, { assignSelf: true });
+      toast.success(`${lead.firstName} ${lead.lastName} dir zugewiesen`);
+      fetchLeads();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Zuweisen');
+    }
   };
 
   const handleConvertConfirm = async () => {
@@ -181,6 +191,7 @@ export const LeadsPage: React.FC = () => {
           onJeffrey={handleJeffrey}
           // onVoiceAgent={handleVoiceAgent}  // Voice Agent deaktiviert — Backend-Code bleibt erhalten
           onConvertToEigenkunde={handleConvertClick}
+          onAssign={handleAssign}
         />
       )}
 

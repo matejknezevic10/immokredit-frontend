@@ -21,6 +21,7 @@ import {
   KundeObjektPage,
 } from './pages/Kunde';
 import { SecureDownloadPage } from './pages/SecureDownload/SecureDownloadPage';
+import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import logoImg from './assets/logo.png';
 import './styles/global.css';
 import './styles/mobile.css';
@@ -35,11 +36,12 @@ function AppRoutes() {
     checkAuth();
   }, [checkAuth]);
 
-  // Public route — no auth required
-  if (location.pathname.startsWith('/secure-download')) {
+  // Public routes — no auth required
+  if (location.pathname.startsWith('/secure-download') || location.pathname.startsWith('/sign/')) {
     return (
       <Routes>
         <Route path="/secure-download/:accessToken" element={<SecureDownloadPage />} />
+        <Route path="/sign/:token" element={<PublicSignaturePage />} />
       </Routes>
     );
   }

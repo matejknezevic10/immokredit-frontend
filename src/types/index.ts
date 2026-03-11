@@ -41,6 +41,7 @@ export interface Lead {
   kaufwahrscheinlichkeit?: number;
   isKunde?: boolean;
   assignedToId?: string;
+  assignedTo?: { id: string; name: string } | null;
   assignedAt?: string;
   createdAt: string;
   updatedAt: string;
