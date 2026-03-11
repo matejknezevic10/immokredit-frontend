@@ -113,6 +113,7 @@ export const KundeDetailPage: React.FC = () => {
   const [showSignatureLinkModal, setShowSignatureLinkModal] = useState(false);
   const [signatureLinkUrl, setSignatureLinkUrl] = useState('');
   const [signatureLinkLoading, setSignatureLinkLoading] = useState(false);
+  const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
 
   useEffect(() => {
     if (leadId) {
@@ -490,34 +491,11 @@ export const KundeDetailPage: React.FC = () => {
 
       {/* Digital Signature Section — show from UNTERLAGEN_VOLLSTAENDIG onwards */}
       {dealStage && ['UNTERLAGEN_VOLLSTAENDIG', 'BANK_ANFRAGE', 'WARTEN_AUF_ZUSAGE', 'ZUSAGE_ERHALTEN', 'ABGESCHLOSSEN'].includes(dealStage) && !signatureStatus.signed && (
-        <>
-          <SignaturePad
-            leadId={leadId!}
-            signerName={`${kunde.firstName} ${kunde.lastName}`}
-            onSigned={() => loadSignatureStatus()}
-          />
-          <div style={{ marginTop: '12px', textAlign: 'center' }}>
-            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '8px' }}>Oder senden Sie dem Kunden einen Signatur-Link:</p>
-            <button
-              className="btn btn-secondary"
-              disabled={signatureLinkLoading}
-              onClick={async () => {
-                setSignatureLinkLoading(true);
-                try {
-                  const res = await api.post('/signature/create-link', { leadId });
-                  setSignatureLinkUrl(res.data.signatureUrl);
-                  setShowSignatureLinkModal(true);
-                } catch (err: any) {
-                  toast.error(err.response?.data?.error || 'Fehler beim Erstellen');
-                } finally {
-                  setSignatureLinkLoading(false);
-                }
-              }}
-            >
-              {signatureLinkLoading ? '⏳ Erstelle...' : '🔗 Signatur-Link erstellen'}
-            </button>
-          </div>
-        </>
+        <SignaturePad
+          leadId={leadId!}
+          signerName={`${kunde.firstName} ${kunde.lastName}`}
+          onSigned={() => loadSignatureStatus()}
+        />
       )}
 
       {signatureStatus.signed && (
@@ -551,6 +529,37 @@ export const KundeDetailPage: React.FC = () => {
           disabled={sendingSecureLink}
         >
           🔒 Verschlüsselten Link senden
+        </button>
+      </div>
+
+      {/* Signatur-Link Section — always visible, directly under secure link */}
+      <div className="secure-link-section">
+        <div className="secure-link-header">
+          <span className="secure-link-icon">✍️</span>
+          <div>
+            <h3 className="secure-link-title">Signatur-Link</h3>
+            <p className="secure-link-desc">
+              Erstellt einen Link, den der Kunde zum digitalen Unterschreiben öffnen kann.
+            </p>
+          </div>
+        </div>
+        <button
+          className="btn btn-primary"
+          disabled={signatureLinkLoading}
+          onClick={async () => {
+            setSignatureLinkLoading(true);
+            try {
+              const res = await api.post('/signature/create-link', { leadId });
+              setSignatureLinkUrl(res.data.signatureUrl);
+              setShowSignatureLinkModal(true);
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || 'Fehler beim Erstellen');
+            } finally {
+              setSignatureLinkLoading(false);
+            }
+          }}
+        >
+          {signatureLinkLoading ? '⏳ Erstelle...' : '🔗 Signatur-Link erstellen'}
         </button>
       </div>
 
@@ -666,41 +675,57 @@ export const KundeDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Email Tracking Section */}
+      {/* Email Tracking Section — collapsible */}
       {emailHistory.length > 0 && (
         <>
-          <p className="kunde-section-label">Email-Verlauf</p>
-          <div className="email-tracking-list">
-            {emailHistory.map(email => (
-              <div key={email.id} className={`email-tracking-item ${email.status}`}>
-                <div className="email-tracking-icon">
-                  {email.status === 'opened' ? '📬' : email.status === 'failed' ? '❌' : '📧'}
-                </div>
-                <div className="email-tracking-content">
-                  <div className="email-tracking-subject">{email.subject}</div>
-                  <div className="email-tracking-meta">
-                    An: {email.to} · {new Date(email.sentAt).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          <div
+            className="kunde-section-label email-history-toggle"
+            onClick={() => setEmailHistoryOpen(prev => !prev)}
+            style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <span style={{
+              display: 'inline-block',
+              transition: 'transform 0.2s',
+              transform: emailHistoryOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+              fontSize: '12px',
+            }}>
+              ▶
+            </span>
+            Email-Verlauf ({emailHistory.length})
+          </div>
+          {emailHistoryOpen && (
+            <div className="email-tracking-list">
+              {emailHistory.map(email => (
+                <div key={email.id} className={`email-tracking-item ${email.status}`}>
+                  <div className="email-tracking-icon">
+                    {email.status === 'opened' ? '📬' : email.status === 'failed' ? '❌' : '📧'}
+                  </div>
+                  <div className="email-tracking-content">
+                    <div className="email-tracking-subject">{email.subject}</div>
+                    <div className="email-tracking-meta">
+                      An: {email.to} · {new Date(email.sentAt).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="email-tracking-status">
+                    {email.status === 'opened' ? (
+                      <span className="email-badge opened">
+                        Gelesen {email.openCount > 1 ? `(${email.openCount}x)` : ''}
+                      </span>
+                    ) : email.status === 'failed' ? (
+                      <span className="email-badge failed">Fehler</span>
+                    ) : (
+                      <span className="email-badge sent">Gesendet</span>
+                    )}
+                    {email.openedAt && (
+                      <span className="email-opened-time">
+                        {new Date(email.openedAt).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="email-tracking-status">
-                  {email.status === 'opened' ? (
-                    <span className="email-badge opened">
-                      Gelesen {email.openCount > 1 ? `(${email.openCount}x)` : ''}
-                    </span>
-                  ) : email.status === 'failed' ? (
-                    <span className="email-badge failed">Fehler</span>
-                  ) : (
-                    <span className="email-badge sent">Gesendet</span>
-                  )}
-                  {email.openedAt && (
-                    <span className="email-opened-time">
-                      {new Date(email.openedAt).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </>
       )}
       {/* Jeffrey Unterlagen-Check Modal */}
