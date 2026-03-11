@@ -235,6 +235,22 @@ export const KundeDetailPage: React.FC = () => {
           <h1 className="kunde-title">{kunde.firstName} {kunde.lastName}</h1>
           <p className="kunde-subtitle">{kunde.email} · {kunde.phone}</p>
         </div>
+        <button
+          className="kunde-archive-btn"
+          onClick={async () => {
+            if (!confirm(`${kunde.firstName} ${kunde.lastName} archivieren?`)) return;
+            try {
+              await api.post(`/leads/${leadId}/archive`);
+              toast.success('Kunde archiviert');
+              navigate('/kunde');
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || 'Fehler beim Archivieren');
+            }
+          }}
+          title="Archivieren"
+        >
+          📦
+        </button>
       </div>
 
       {/* Jeffrey OCR — kompakte Inline-Leiste */}
