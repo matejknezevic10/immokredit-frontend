@@ -304,7 +304,7 @@ export const KundeDetailPage: React.FC = () => {
             <span className="jeffrey-title">Jeffrey</span>
             <span className="jeffrey-desc">{docCount} Dokument{docCount !== 1 ? 'e' : ''}</span>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="jeffrey-actions">
             <input
               type="file"
               ref={fileInputRef}
