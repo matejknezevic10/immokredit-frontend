@@ -110,6 +110,9 @@ export const KundeDetailPage: React.FC = () => {
   const [showSecureLinkModal, setShowSecureLinkModal] = useState(false);
   const [secureLinkEmailOption, setSecureLinkEmailOption] = useState<'default' | 'custom'>('default');
   const [showJeffreyCheck, setShowJeffreyCheck] = useState(false);
+  const [showSignatureLinkModal, setShowSignatureLinkModal] = useState(false);
+  const [signatureLinkUrl, setSignatureLinkUrl] = useState('');
+  const [signatureLinkLoading, setSignatureLinkLoading] = useState(false);
 
   useEffect(() => {
     if (leadId) {
@@ -481,18 +484,21 @@ export const KundeDetailPage: React.FC = () => {
             <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '8px' }}>Oder senden Sie dem Kunden einen Signatur-Link:</p>
             <button
               className="btn btn-secondary"
+              disabled={signatureLinkLoading}
               onClick={async () => {
+                setSignatureLinkLoading(true);
                 try {
                   const res = await api.post('/signature/create-link', { leadId });
-                  const url = res.data.signatureUrl;
-                  await navigator.clipboard.writeText(url);
-                  toast.success('Signatur-Link kopiert!');
+                  setSignatureLinkUrl(res.data.signatureUrl);
+                  setShowSignatureLinkModal(true);
                 } catch (err: any) {
                   toast.error(err.response?.data?.error || 'Fehler beim Erstellen');
+                } finally {
+                  setSignatureLinkLoading(false);
                 }
               }}
             >
-              &#128279; Signatur-Link erstellen & kopieren
+              {signatureLinkLoading ? '⏳ Erstelle...' : '🔗 Signatur-Link erstellen'}
             </button>
           </div>
         </>
@@ -600,6 +606,44 @@ export const KundeDetailPage: React.FC = () => {
                 disabled={sendingSecureLink || (secureLinkEmailOption === 'custom' && !secureLinkEmail.trim()) || (secureLinkEmailOption === 'default' && !kunde.email)}
               >
                 {sendingSecureLink ? '⏳ Wird gesendet...' : '📨 Senden'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Signatur-Link Modal */}
+      {showSignatureLinkModal && (
+        <div className="modal-overlay" onClick={() => setShowSignatureLinkModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', padding: '24px' }}>
+            <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>🔗 Signatur-Link</h2>
+            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px' }}>
+              Senden Sie diesen Link an den Kunden zum digitalen Unterschreiben.
+            </p>
+
+            <div style={{
+              background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px',
+              padding: '12px', marginBottom: '16px', wordBreak: 'break-all', fontSize: '13px',
+              fontFamily: 'monospace', color: '#334155',
+            }}>
+              {signatureLinkUrl}
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowSignatureLinkModal(false)}
+              >
+                Schließen
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(signatureLinkUrl);
+                  toast.success('Link in Zwischenablage kopiert!');
+                }}
+              >
+                📋 Link kopieren
               </button>
             </div>
           </div>
