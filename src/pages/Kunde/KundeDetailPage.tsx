@@ -105,10 +105,10 @@ export const KundeDetailPage: React.FC = () => {
   const [emailHistory, setEmailHistory] = useState<EmailTrackingEntry[]>([]);
   const [dealStage, setDealStage] = useState<string | null>(null);
   const [signatureStatus, setSignatureStatus] = useState<{ signed: boolean; signatures: any[] }>({ signed: false, signatures: [] });
-  const [sendingSecureLink, setSendingSecureLink] = useState(false);
-  const [secureLinkEmail, setSecureLinkEmail] = useState('');
-  const [showSecureLinkModal, setShowSecureLinkModal] = useState(false);
-  const [secureLinkEmailOption, setSecureLinkEmailOption] = useState<'default' | 'custom'>('default');
+  const [sendingToBank, setSendingToBank] = useState(false);
+  const [bankEmail, setBankEmail] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [showBankModal, setShowBankModal] = useState(false);
   const [showJeffreyCheck, setShowJeffreyCheck] = useState(false);
   const [showSignatureLinkModal, setShowSignatureLinkModal] = useState(false);
   const [signatureLinkUrl, setSignatureLinkUrl] = useState('');
@@ -173,20 +173,24 @@ export const KundeDetailPage: React.FC = () => {
     }
   };
 
-  const handleSendSecureLink = async () => {
-    if (!leadId) return;
-    setSendingSecureLink(true);
+  const handleSendToBank = async () => {
+    if (!leadId || !bankEmail.trim()) return;
+    setSendingToBank(true);
     try {
-      await api.post('/secure-link/create', {
+      const res = await api.post('/secure-link/send-to-bank', {
         leadId,
-        recipientEmail: secureLinkEmail.trim() || undefined,
+        recipientEmail: bankEmail.trim(),
+        recipientName: bankName.trim() || undefined,
       });
-      toast.success(`Link + Passwort an ${secureLinkEmail.trim() || kunde?.email || 'Kunde'} gesendet`);
+      toast.success(`${res.data.documentCount} Dokumente an ${bankEmail.trim()} gesendet`);
+      setShowBankModal(false);
+      setBankEmail('');
+      setBankName('');
       loadEmailHistory();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Fehler beim Erstellen des Links');
+      toast.error(err.response?.data?.error || 'Fehler beim Senden');
     } finally {
-      setSendingSecureLink(false);
+      setSendingToBank(false);
     }
   };
 
@@ -512,23 +516,23 @@ export const KundeDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Secure Document Link — always visible */}
+      {/* Send Documents to Bank — always visible */}
       <div className="secure-link-section">
         <div className="secure-link-header">
-          <span className="secure-link-icon">🔒</span>
+          <span className="secure-link-icon">🏦</span>
           <div>
-            <h3 className="secure-link-title">Verschlüsselter Dokumenten-Link</h3>
+            <h3 className="secure-link-title">Unterlagen an Bank senden</h3>
             <p className="secure-link-desc">
-              Sendet dem Kunden einen passwortgeschützten Download-Link + separates Passwort per Email.
+              Sendet alle verarbeiteten Dokumente als PDF-Anhang per Email an den Bankberater.
             </p>
           </div>
         </div>
         <button
           className="btn btn-primary"
-          onClick={() => setShowSecureLinkModal(true)}
-          disabled={sendingSecureLink}
+          onClick={() => setShowBankModal(true)}
+          disabled={sendingToBank}
         >
-          🔒 Verschlüsselten Link senden
+          📨 Unterlagen senden
         </button>
       </div>
 
@@ -563,74 +567,57 @@ export const KundeDetailPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Secure Link Modal */}
-      {showSecureLinkModal && (
-        <div className="modal-overlay" onClick={() => !sendingSecureLink && setShowSecureLinkModal(false)}>
+      {/* Bank Send Modal */}
+      {showBankModal && (
+        <div className="modal-overlay" onClick={() => !sendingToBank && setShowBankModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', padding: '24px' }}>
-            <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>🔒 Verschlüsselten Link senden</h2>
+            <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>🏦 Unterlagen an Bank senden</h2>
             <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 20px' }}>
-              Der Kunde erhält 2 separate Emails: einen Download-Link und ein Passwort.
+              Alle verarbeiteten Dokumente werden als PDF-Anhang per Email gesendet.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
-                  border: secureLinkEmailOption === 'default' ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                  borderRadius: '10px', cursor: 'pointer', background: secureLinkEmailOption === 'default' ? '#eff6ff' : '#fff',
-                }}
-                onClick={() => { setSecureLinkEmailOption('default'); setSecureLinkEmail(''); }}
-              >
-                <input type="radio" name="emailOption" checked={secureLinkEmailOption === 'default'} readOnly style={{ accentColor: '#2563eb' }} />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '14px' }}>Hinterlegte Email</div>
-                  <div style={{ color: '#64748b', fontSize: '13px' }}>{kunde.email || 'Keine Email hinterlegt'}</div>
-                </div>
-              </label>
-
-              <label
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
-                  border: secureLinkEmailOption === 'custom' ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                  borderRadius: '10px', cursor: 'pointer', background: secureLinkEmailOption === 'custom' ? '#eff6ff' : '#fff',
-                }}
-                onClick={() => setSecureLinkEmailOption('custom')}
-              >
-                <input type="radio" name="emailOption" checked={secureLinkEmailOption === 'custom'} readOnly style={{ accentColor: '#2563eb' }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>Andere Email-Adresse</div>
-                  {secureLinkEmailOption === 'custom' && (
-                    <input
-                      type="email"
-                      placeholder="email@beispiel.at"
-                      value={secureLinkEmail}
-                      onChange={(e) => setSecureLinkEmail(e.target.value)}
-                      autoFocus
-                      style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px' }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
-                </div>
-              </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
+                  Email-Adresse des Bankberaters *
+                </label>
+                <input
+                  type="email"
+                  placeholder="bankberater@bank.at"
+                  value={bankEmail}
+                  onChange={(e) => setBankEmail(e.target.value)}
+                  autoFocus
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
+                  Name des Bankberaters (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="z.B. Herr Müller, Sparkasse"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 className="btn btn-secondary"
-                onClick={() => setShowSecureLinkModal(false)}
-                disabled={sendingSecureLink}
+                onClick={() => setShowBankModal(false)}
+                disabled={sendingToBank}
               >
                 Abbrechen
               </button>
               <button
                 className="btn btn-primary"
-                onClick={async () => {
-                  await handleSendSecureLink();
-                  setShowSecureLinkModal(false);
-                }}
-                disabled={sendingSecureLink || (secureLinkEmailOption === 'custom' && !secureLinkEmail.trim()) || (secureLinkEmailOption === 'default' && !kunde.email)}
+                onClick={handleSendToBank}
+                disabled={sendingToBank || !bankEmail.trim()}
               >
-                {sendingSecureLink ? '⏳ Wird gesendet...' : '📨 Senden'}
+                {sendingToBank ? '⏳ Wird gesendet...' : '📨 Senden'}
               </button>
             </div>
           </div>
