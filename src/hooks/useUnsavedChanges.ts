@@ -1,13 +1,12 @@
 // src/hooks/useUnsavedChanges.ts
 import { useEffect, useRef, useCallback } from 'react';
-import { useBlocker } from 'react-router-dom';
 
 /**
  * Hook to warn users about unsaved changes when navigating away.
- * Uses browser beforeunload + React Router blocker.
+ * Uses browser beforeunload event (works with BrowserRouter).
  */
 export function useUnsavedChanges(isDirty: boolean) {
-  // Browser tab close / reload
+  // Browser tab close / reload / navigation
   useEffect(() => {
     if (!isDirty) return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -18,26 +17,29 @@ export function useUnsavedChanges(isDirty: boolean) {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  // React Router navigation
-  const blocker = useBlocker(isDirty);
-
+  // For in-app navigation: intercept popstate (back/forward buttons)
   useEffect(() => {
-    if (blocker.state === 'blocked') {
+    if (!isDirty) return;
+
+    const handlePopState = () => {
       const confirmed = window.confirm(
         'Du hast ungespeicherte Änderungen. Möchtest du die Seite wirklich verlassen?'
       );
-      if (confirmed) {
-        blocker.proceed();
-      } else {
-        blocker.reset();
+      if (!confirmed) {
+        // Push the current URL back to prevent navigation
+        window.history.pushState(null, '', window.location.href);
       }
-    }
-  }, [blocker]);
+    };
+
+    // Push a dummy state so we can intercept the back button
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isDirty]);
 }
 
 /**
  * Hook to track if form data has changed since last save/load.
- * Returns [isDirty, markClean, markDirty]
  */
 export function useDirtyTracker() {
   const savedRef = useRef<string>('');
