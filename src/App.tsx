@@ -20,6 +20,7 @@ import {
   KundeFinanzplanPage,
   KundeObjektPage,
 } from './pages/Kunde';
+import { ArchivPage } from './pages/Archiv/ArchivPage';
 import { SecureDownloadPage } from './pages/SecureDownload/SecureDownloadPage';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import logoImg from './assets/logo.png';
@@ -85,6 +86,7 @@ function AppRoutes() {
           <Route path="/kunde/:leadId/haushalt" element={<KundeHaushaltPage />} />
           <Route path="/kunde/:leadId/finanzplan" element={<KundeFinanzplanPage />} />
           <Route path="/kunde/:leadId/objekt" element={<KundeObjektPage />} />
+          <Route path="/archiv" element={<ArchivPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/mails" element={<MailsPage />} />
         </Routes>

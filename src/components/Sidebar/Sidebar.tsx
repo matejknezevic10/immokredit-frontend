@@ -29,6 +29,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
     title: 'Kunde',
     items: [
       { id: 'kunde', label: 'Kunde', icon: '🧑‍💼', path: '/kunde' },
+      { id: 'archiv', label: 'Archiv', icon: '📦', path: '/archiv' },
     ],
   },
   {

@@ -116,12 +116,39 @@
   flex-shrink: 0;
 }
 
-.kunde-card-completion {
+.kunde-card-bottom {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid #f1f5f9;
+}
+
+.kunde-card-completion {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.kunde-archive-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.kunde-archive-btn:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
 }
 
 .completion-dot {

@@ -27,6 +27,7 @@ export const KundePage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [archiveId, setArchiveId] = useState<string | null>(null);
   const [newKunde, setNewKunde] = useState({
     firstName: '',
     lastName: '',
@@ -101,6 +102,20 @@ export const KundePage: React.FC = () => {
     }
   };
 
+  const handleArchive = async () => {
+    if (!archiveId) return;
+    try {
+      await api.post(`/leads/${archiveId}/archive`);
+      setKunden(prev => prev.filter(k => k.id !== archiveId));
+      toast.success('Kunde archiviert');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Archivieren');
+    }
+    setArchiveId(null);
+  };
+
+  const archiveKunde = kunden.find(k => k.id === archiveId);
+
   if (loading) {
     return (
       <div className="kunde-page">
@@ -151,22 +166,31 @@ export const KundePage: React.FC = () => {
               </span>
             </div>
 
-            <div className="kunde-card-completion">
-              {getCompletionDots(k).map((dot, i) => (
-                <div
-                  key={i}
-                  className={`completion-dot ${dot.done ? 'done' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleCompletion(k.id, dot.section, dot.done);
-                  }}
-                  style={{ cursor: 'pointer' }}
-                  title={`Klicken um ${dot.label} als ${dot.done ? 'offen' : 'erledigt'} zu markieren`}
-                >
-                  <span className="completion-indicator">{dot.done ? '✅' : '⬜'}</span>
-                  <span className="completion-label">{dot.label}</span>
-                </div>
-              ))}
+            <div className="kunde-card-bottom">
+              <div className="kunde-card-completion">
+                {getCompletionDots(k).map((dot, i) => (
+                  <div
+                    key={i}
+                    className={`completion-dot ${dot.done ? 'done' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCompletion(k.id, dot.section, dot.done);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    title={`Klicken um ${dot.label} als ${dot.done ? 'offen' : 'erledigt'} zu markieren`}
+                  >
+                    <span className="completion-indicator">{dot.done ? '✅' : '⬜'}</span>
+                    <span className="completion-label">{dot.label}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                className="kunde-archive-btn"
+                onClick={(e) => { e.stopPropagation(); setArchiveId(k.id); }}
+                title="Archivieren"
+              >
+                📦
+              </button>
             </div>
           </div>
         ))}
@@ -246,6 +270,32 @@ export const KundePage: React.FC = () => {
                 disabled={creating || !newKunde.firstName || !newKunde.lastName}
               >
                 {creating ? '⏳ Erstelle...' : 'Kunde anlegen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Archivieren Modal ── */}
+      {archiveId && archiveKunde && (
+        <div className="kunde-modal-overlay" onClick={() => setArchiveId(null)}>
+          <div className="kunde-modal" onClick={e => e.stopPropagation()}>
+            <div className="kunde-modal-header">
+              <h2>Kunde archivieren?</h2>
+              <button className="kunde-modal-close" onClick={() => setArchiveId(null)}>x</button>
+            </div>
+            <div className="kunde-modal-body">
+              <p>
+                <strong>{archiveKunde.firstName} {archiveKunde.lastName}</strong> wird archiviert
+                und verschwindet aus der aktiven Kundenliste. Du findest den Kunden im Archiv.
+              </p>
+            </div>
+            <div className="kunde-modal-footer">
+              <button className="kunde-modal-cancel" onClick={() => setArchiveId(null)}>
+                Abbrechen
+              </button>
+              <button className="kunde-modal-submit" onClick={handleArchive}>
+                Archivieren
               </button>
             </div>
           </div>
