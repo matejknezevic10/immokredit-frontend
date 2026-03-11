@@ -1,64 +1,63 @@
 // src/hooks/useUnsavedChanges.ts
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Hook to warn users about unsaved changes when navigating away.
- * Uses browser beforeunload event (works with BrowserRouter).
+ * Works with BrowserRouter (no Data Router required).
+ * Intercepts: tab close, browser back/forward, and SPA navigation.
  */
 export function useUnsavedChanges(isDirty: boolean) {
-  // Browser tab close / reload / navigation
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
+
+  // Browser tab close / reload
   useEffect(() => {
-    if (!isDirty) return;
     const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirtyRef.current) return;
       e.preventDefault();
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [isDirty]);
+  }, []);
 
-  // For in-app navigation: intercept popstate (back/forward buttons)
+  // Intercept SPA navigation (React Router uses pushState/replaceState)
   useEffect(() => {
-    if (!isDirty) return;
+    const originalPushState = history.pushState.bind(history);
+    const originalReplaceState = history.replaceState.bind(history);
 
+    const intercept = (original: typeof history.pushState) => {
+      return function (this: History, state: any, title: string, url?: string | URL | null) {
+        if (isDirtyRef.current) {
+          const confirmed = window.confirm(
+            'Du hast ungespeicherte Änderungen. Möchtest du die Seite wirklich verlassen?'
+          );
+          if (!confirmed) return;
+        }
+        return original.call(this, state, title, url);
+      };
+    };
+
+    history.pushState = intercept(originalPushState);
+    history.replaceState = intercept(originalReplaceState);
+
+    // Also handle browser back/forward
     const handlePopState = () => {
+      if (!isDirtyRef.current) return;
       const confirmed = window.confirm(
         'Du hast ungespeicherte Änderungen. Möchtest du die Seite wirklich verlassen?'
       );
       if (!confirmed) {
-        // Push the current URL back to prevent navigation
-        window.history.pushState(null, '', window.location.href);
+        // Push current URL back to cancel navigation
+        originalPushState(null, '', window.location.href);
       }
     };
-
-    // Push a dummy state so we can intercept the back button
-    window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isDirty]);
-}
 
-/**
- * Hook to track if form data has changed since last save/load.
- */
-export function useDirtyTracker() {
-  const savedRef = useRef<string>('');
-  const currentRef = useRef<string>('');
-  const dirtyRef = useRef(false);
-
-  const markClean = useCallback((data: any) => {
-    const json = JSON.stringify(data);
-    savedRef.current = json;
-    currentRef.current = json;
-    dirtyRef.current = false;
+    return () => {
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
-
-  const checkDirty = useCallback((data: any): boolean => {
-    const json = JSON.stringify(data);
-    currentRef.current = json;
-    dirtyRef.current = json !== savedRef.current;
-    return dirtyRef.current;
-  }, []);
-
-  return { markClean, checkDirty };
 }
