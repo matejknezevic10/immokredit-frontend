@@ -177,7 +177,7 @@ export const KundeDetailPage: React.FC = () => {
         recipientEmail: secureLinkEmail.trim() || undefined,
       });
       setSecureLinkSent(true);
-      toast.success(`Link + Passwort an ${secureLinkEmail.trim() || kunde.email} gesendet`);
+      toast.success(`Link + Passwort an ${secureLinkEmail.trim() || kunde?.email || 'Kunde'} gesendet`);
       loadEmailHistory();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Fehler beim Erstellen des Links');
