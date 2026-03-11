@@ -11,7 +11,6 @@ import { LoginPage } from './pages/Login/LoginPage';
 import { JeffreyChat } from './components/Chat/JeffreyChat';
 import DocumentsPage from './pages/Documents/DocumentsPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
-import { MailsPage } from './pages/Mails/MailsPage';
 import {
   KundePage,
   KundeDetailPage,
@@ -88,7 +87,6 @@ function AppRoutes() {
           <Route path="/kunde/:leadId/objekt" element={<KundeObjektPage />} />
           <Route path="/archiv" element={<ArchivPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/mails" element={<MailsPage />} />
         </Routes>
       </main>
       <JeffreyChat />

@@ -35,7 +35,6 @@ const navSections: { title: string; items: NavItem[] }[] = [
   {
     title: 'Tools',
     items: [
-      { id: 'mails', label: 'Mails', icon: '✉️', path: '/mails' },
       { id: 'whatsapp-web', label: 'WhatsApp Web', icon: '💬', path: 'https://web.whatsapp.com', external: true },
       { id: 'google-drive', label: 'Google Drive', icon: '📁', path: 'https://drive.google.com', external: true },
     ],

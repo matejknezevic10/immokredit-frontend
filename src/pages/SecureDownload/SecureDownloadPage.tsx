@@ -141,16 +141,13 @@ export const SecureDownloadPage: React.FC = () => {
                     <span className="secure-download-item-name">{doc.originalFilename}</span>
                     <span className="secure-download-item-size">{formatFileSize(doc.size)}</span>
                   </div>
-                  {doc.googleDriveUrl && (
-                    <a
-                      href={doc.googleDriveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="secure-download-item-btn"
-                    >
-                      Herunterladen
-                    </a>
-                  )}
+                  <a
+                    href={`${API_BASE}/secure-link/download/${doc.id}?accessToken=${accessToken}&password=${encodeURIComponent(password.toUpperCase())}`}
+                    className="secure-download-item-btn"
+                    download={doc.originalFilename}
+                  >
+                    Herunterladen
+                  </a>
                 </div>
               ))}
             </div>
