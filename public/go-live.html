@@ -87,6 +87,45 @@
     .script-block .highlight { color: #60a5fa; }
     .script-block .string { color: #34d399; }
 
+    /* Findings styles */
+    .findings-controls { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .findings-input { flex: 1; min-width: 200px; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border-color 0.2s; }
+    .findings-input:focus { outline: none; border-color: #2563eb; }
+    .findings-select { padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; background: white; cursor: pointer; }
+    .findings-add { padding: 12px 20px; background: #2563eb; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+    .findings-add:hover { background: #1d4ed8; }
+
+    .finding-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; transition: all 0.2s; background: white; }
+    .finding-item:hover { border-color: #cbd5e1; }
+    .finding-item.done { background: #f0fdf4; border-color: #bbf7d0; opacity: 0.7; }
+    .finding-item.done .finding-text { text-decoration: line-through; color: #94a3b8; }
+    .finding-check { width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 6px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px; transition: all 0.2s; }
+    .finding-item.done .finding-check { background: #22c55e; border-color: #22c55e; }
+    .finding-item.done .finding-check::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
+    .finding-text { flex: 1; font-size: 14px; font-weight: 500; }
+    .finding-meta { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
+    .finding-date { font-size: 11px; color: #94a3b8; }
+
+    .prio-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .prio-hoch { background: #fee2e2; color: #dc2626; }
+    .prio-mittel { background: #fef3c7; color: #d97706; }
+    .prio-niedrig { background: #dbeafe; color: #2563eb; }
+
+    .finding-delete { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 18px; padding: 0 4px; transition: color 0.2s; flex-shrink: 0; }
+    .finding-delete:hover { color: #ef4444; }
+
+    .findings-filter { display: flex; gap: 6px; margin-bottom: 16px; }
+    .filter-btn { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 13px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+    .filter-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+    .filter-btn:hover:not(.active) { background: #f1f5f9; }
+
+    .findings-stats { display: flex; gap: 16px; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 10px; }
+    .findings-stat { text-align: center; flex: 1; }
+    .findings-stat-num { font-size: 1.5rem; font-weight: 700; color: #1e3a5f; }
+    .findings-stat-label { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    .findings-empty { text-align: center; padding: 40px; color: #94a3b8; font-size: 14px; }
+
     /* Print styles */
     @media print {
       .tabs { display: none; }
@@ -115,6 +154,7 @@
 <div class="container">
   <div class="tabs">
     <button class="tab active" onclick="switchTab('checklist')">Checkliste</button>
+    <button class="tab" onclick="switchTab('findings')">Findings</button>
     <button class="tab" onclick="switchTab('usecases')">Präsentation</button>
     <button class="tab" onclick="switchTab('env')">Umgebungsvariablen</button>
     <button class="tab" onclick="switchTab('script')">Demo-Skript</button>
@@ -386,6 +426,59 @@
         </li>
       </ul>
     </div>
+  </div>
+
+  <!-- ==================== TAB: FINDINGS ==================== -->
+  <div class="tab-content" id="tab-findings">
+    <h2>Findings & To-Do</h2>
+
+    <div class="findings-stats">
+      <div class="findings-stat">
+        <div class="findings-stat-num" id="findingsTotal">0</div>
+        <div class="findings-stat-label">Gesamt</div>
+      </div>
+      <div class="findings-stat">
+        <div class="findings-stat-num" id="findingsOpen" style="color: #d97706;">0</div>
+        <div class="findings-stat-label">Offen</div>
+      </div>
+      <div class="findings-stat">
+        <div class="findings-stat-num" id="findingsDone" style="color: #22c55e;">0</div>
+        <div class="findings-stat-label">Erledigt</div>
+      </div>
+      <div class="findings-stat">
+        <div class="findings-stat-num" id="findingsHigh" style="color: #dc2626;">0</div>
+        <div class="findings-stat-label">Hoch</div>
+      </div>
+    </div>
+
+    <div class="findings-controls">
+      <input type="text" class="findings-input" id="findingInput" placeholder="Neues Finding eingeben..." onkeydown="if(event.key==='Enter')addFinding()">
+      <select class="findings-select" id="findingPrio">
+        <option value="hoch">🔴 Hoch</option>
+        <option value="mittel" selected>🟡 Mittel</option>
+        <option value="niedrig">🔵 Niedrig</option>
+      </select>
+      <select class="findings-select" id="findingCategory">
+        <option value="Bug">🐛 Bug</option>
+        <option value="Feature">✨ Feature</option>
+        <option value="UI">🎨 UI/UX</option>
+        <option value="Performance">⚡ Performance</option>
+        <option value="Sicherheit">🔒 Sicherheit</option>
+        <option value="Sonstiges">📌 Sonstiges</option>
+      </select>
+      <button class="findings-add" onclick="addFinding()">+ Hinzufügen</button>
+    </div>
+
+    <div class="findings-filter">
+      <button class="filter-btn active" onclick="filterFindings('alle', this)">Alle</button>
+      <button class="filter-btn" onclick="filterFindings('offen', this)">Offen</button>
+      <button class="filter-btn" onclick="filterFindings('erledigt', this)">Erledigt</button>
+      <button class="filter-btn" onclick="filterFindings('hoch', this)">🔴 Hoch</button>
+      <button class="filter-btn" onclick="filterFindings('mittel', this)">🟡 Mittel</button>
+      <button class="filter-btn" onclick="filterFindings('niedrig', this)">🔵 Niedrig</button>
+    </div>
+
+    <div id="findingsList"></div>
   </div>
 
   <!-- ==================== TAB 2: USE CASES ==================== -->
@@ -802,12 +895,122 @@
     } catch (e) {}
   }
 
+  // ==================== FINDINGS LOGIC ====================
+  let findings = [];
+  let currentFilter = 'alle';
+
+  function loadFindings() {
+    try {
+      const raw = localStorage.getItem('immokredit_findings');
+      if (raw) findings = JSON.parse(raw);
+    } catch (e) {}
+    renderFindings();
+  }
+
+  function saveFindings() {
+    localStorage.setItem('immokredit_findings', JSON.stringify(findings));
+  }
+
+  function addFinding() {
+    const input = document.getElementById('findingInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    findings.unshift({
+      id: Date.now(),
+      text: text,
+      prio: document.getElementById('findingPrio').value,
+      category: document.getElementById('findingCategory').value,
+      done: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    input.value = '';
+    saveFindings();
+    renderFindings();
+  }
+
+  function toggleFinding(id) {
+    const f = findings.find(f => f.id === id);
+    if (f) f.done = !f.done;
+    saveFindings();
+    renderFindings();
+  }
+
+  function deleteFinding(id) {
+    if (!confirm('Finding wirklich löschen?')) return;
+    findings = findings.filter(f => f.id !== id);
+    saveFindings();
+    renderFindings();
+  }
+
+  function filterFindings(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderFindings();
+  }
+
+  function renderFindings() {
+    const list = document.getElementById('findingsList');
+    let filtered = findings;
+
+    if (currentFilter === 'offen') filtered = findings.filter(f => !f.done);
+    else if (currentFilter === 'erledigt') filtered = findings.filter(f => f.done);
+    else if (currentFilter === 'hoch') filtered = findings.filter(f => f.prio === 'hoch');
+    else if (currentFilter === 'mittel') filtered = findings.filter(f => f.prio === 'mittel');
+    else if (currentFilter === 'niedrig') filtered = findings.filter(f => f.prio === 'niedrig');
+
+    // Sort: open first, then by prio (hoch > mittel > niedrig)
+    const prioOrder = { hoch: 0, mittel: 1, niedrig: 2 };
+    filtered.sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (prioOrder[a.prio] || 2) - (prioOrder[b.prio] || 2);
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="findings-empty">Keine Findings ' + (currentFilter !== 'alle' ? 'mit diesem Filter' : '— super!') + '</div>';
+    } else {
+      list.innerHTML = filtered.map(f => {
+        const date = new Date(f.createdAt).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        const catEmoji = { Bug: '🐛', Feature: '✨', 'UI': '🎨', Performance: '⚡', Sicherheit: '🔒', Sonstiges: '📌' }[f.category] || '📌';
+        return `
+          <div class="finding-item ${f.done ? 'done' : ''}">
+            <div class="finding-check" onclick="toggleFinding(${f.id})"></div>
+            <div style="flex:1">
+              <div class="finding-text">${escapeHtml(f.text)}</div>
+              <div class="finding-meta">
+                <span class="prio-badge prio-${f.prio}">${f.prio}</span>
+                <span style="font-size:12px">${catEmoji} ${f.category}</span>
+                <span class="finding-date">${date}</span>
+              </div>
+            </div>
+            <button class="finding-delete" onclick="deleteFinding(${f.id})" title="Löschen">×</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Update stats
+    document.getElementById('findingsTotal').textContent = findings.length;
+    document.getElementById('findingsOpen').textContent = findings.filter(f => !f.done).length;
+    document.getElementById('findingsDone').textContent = findings.filter(f => f.done).length;
+    document.getElementById('findingsHigh').textContent = findings.filter(f => f.prio === 'hoch' && !f.done).length;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Date
   document.getElementById('dateDisplay').textContent = 'Stand: ' + new Date().toLocaleDateString('de-AT', { day: '2-digit', month: 'long', year: 'numeric' });
 
   // Init
   loadState();
   updateProgress();
+  loadFindings();
 </script>
 
 </body>
