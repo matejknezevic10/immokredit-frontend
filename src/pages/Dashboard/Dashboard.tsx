@@ -62,6 +62,7 @@ interface MyDashboardData {
     letzteLeads: LeadPreview[];
   };
   offeneKunden: OffenerKunde[];
+  alleKunden: OffenerKunde[];
   meineAktivitaeten: DashboardActivity[];
   aktivitaetenHeute: number;
   meineDeals: DealPreview[];
@@ -223,10 +224,10 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* ── Offene Kunden ── */}
+      {/* ── Meine Kunden ── */}
       <div className="offene-kunden-container">
         <div className="offene-kunden-header">
-          <h2 className="section-title">Kunden mit offenen Aufgaben</h2>
+          <h2 className="section-title">Meine Kunden</h2>
           <button className="btn btn-secondary btn-sm" onClick={() => navigate('/kunde')}>
             Alle Kunden →
           </button>
@@ -246,15 +247,9 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : data.offeneKunden.length === 0 ? (
-          <div className="offene-kunden-empty offene-kunden-success">
-            <div className="empty-icon-large">✅</div>
-            <h3>Alle Kunden haben vollständige Daten!</h3>
-            <p>Keine offenen Datensätze bei deinen Kunden.</p>
-          </div>
         ) : (
           <div className="offene-kunden-list">
-            {data.offeneKunden.slice(0, 6).map((k) => (
+            {(data.alleKunden || data.offeneKunden).slice(0, 6).map((k) => (
               <div
                 key={k.id}
                 className="offene-kunden-row"
@@ -281,9 +276,9 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-            {data.offeneKunden.length > 6 && (
+            {(data.alleKunden || data.offeneKunden).length > 6 && (
               <div className="offene-kunden-more">
-                + {data.offeneKunden.length - 6} weitere Kunden mit offenen Daten
+                + {(data.alleKunden || data.offeneKunden).length - 6} weitere Kunden
               </div>
             )}
           </div>
