@@ -105,6 +105,8 @@ export const KundeDetailPage: React.FC = () => {
   const [emailHistory, setEmailHistory] = useState<EmailTrackingEntry[]>([]);
   const [dealStage, setDealStage] = useState<string | null>(null);
   const [signatureStatus, setSignatureStatus] = useState<{ signed: boolean; signatures: any[] }>({ signed: false, signatures: [] });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [showSendModal, setShowSendModal] = useState(false);
   const [sendMethod, setSendMethod] = useState<'secure-link' | 'pdf-attachment'>('secure-link');
   const [sendingDocs, setSendingDocs] = useState(false);
@@ -172,6 +174,30 @@ export const KundeDetailPage: React.FC = () => {
       setSignatureStatus(res.data);
     } catch (err) {
       console.error('Failed to load signature status:', err);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !leadId) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('customer_id', leadId);
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+      const res = await api.post('/documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const count = res.data.documents?.length || 0;
+      toast.success(`${count} Dokument${count !== 1 ? 'e' : ''} hochgeladen`);
+      loadKunde();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Hochladen');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -279,6 +305,21 @@ export const KundeDetailPage: React.FC = () => {
             <span className="jeffrey-desc">{docCount} Dokument{docCount !== 1 ? 'e' : ''}</span>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.tiff,.doc,.docx,.xls,.xlsx,.csv"
+              style={{ display: 'none' }}
+            />
+            <button
+              className="jeffrey-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? '⏳ Lade...' : '📤 Hochladen'}
+            </button>
             <button
               className="jeffrey-btn"
               onClick={() => setShowJeffreyCheck(true)}
