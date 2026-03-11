@@ -105,14 +105,12 @@ export const KundeDetailPage: React.FC = () => {
   const [emailHistory, setEmailHistory] = useState<EmailTrackingEntry[]>([]);
   const [dealStage, setDealStage] = useState<string | null>(null);
   const [signatureStatus, setSignatureStatus] = useState<{ signed: boolean; signatures: any[] }>({ signed: false, signatures: [] });
-  const [sendingSecureLink, setSendingSecureLink] = useState(false);
-  const [secureLinkEmail, setSecureLinkEmail] = useState('');
-  const [showSecureLinkModal, setShowSecureLinkModal] = useState(false);
-  const [secureLinkEmailOption, setSecureLinkEmailOption] = useState<'default' | 'custom'>('default');
-  const [sendingToBank, setSendingToBank] = useState(false);
-  const [bankEmail, setBankEmail] = useState('');
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendMethod, setSendMethod] = useState<'secure-link' | 'pdf-attachment'>('secure-link');
+  const [sendingDocs, setSendingDocs] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [recipientEmailOption, setRecipientEmailOption] = useState<'default' | 'custom'>('default');
   const [bankName, setBankName] = useState('');
-  const [showBankModal, setShowBankModal] = useState(false);
   const [showJeffreyCheck, setShowJeffreyCheck] = useState(false);
   const [showSignatureLinkModal, setShowSignatureLinkModal] = useState(false);
   const [signatureLinkUrl, setSignatureLinkUrl] = useState('');
@@ -177,44 +175,34 @@ export const KundeDetailPage: React.FC = () => {
     }
   };
 
-  const handleSendSecureLink = async () => {
+  const handleSendDocuments = async () => {
     if (!leadId) return;
-    setSendingSecureLink(true);
+    setSendingDocs(true);
     try {
-      await api.post('/secure-link/create', {
-        leadId,
-        recipientEmail: secureLinkEmailOption === 'custom' ? secureLinkEmail.trim() : undefined,
-      });
-      toast.success(`Link + Passwort an ${secureLinkEmailOption === 'custom' ? secureLinkEmail.trim() : kunde?.email || 'Kunde'} gesendet`);
-      setShowSecureLinkModal(false);
-      setSecureLinkEmail('');
-      setSecureLinkEmailOption('default');
-      loadEmailHistory();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Fehler beim Erstellen des Links');
-    } finally {
-      setSendingSecureLink(false);
-    }
-  };
-
-  const handleSendToBank = async () => {
-    if (!leadId || !bankEmail.trim()) return;
-    setSendingToBank(true);
-    try {
-      const res = await api.post('/secure-link/send-to-bank', {
-        leadId,
-        recipientEmail: bankEmail.trim(),
-        recipientName: bankName.trim() || undefined,
-      });
-      toast.success(`${res.data.documentCount} Dokumente an ${bankEmail.trim()} gesendet`);
-      setShowBankModal(false);
-      setBankEmail('');
+      if (sendMethod === 'secure-link') {
+        const email = recipientEmailOption === 'custom' ? recipientEmail.trim() : undefined;
+        await api.post('/secure-link/create', { leadId, recipientEmail: email });
+        toast.success(`Link + Passwort an ${email || kunde?.email || 'Empfänger'} gesendet`);
+      } else {
+        const email = recipientEmail.trim();
+        if (!email) return;
+        const res = await api.post('/secure-link/send-to-bank', {
+          leadId,
+          recipientEmail: email,
+          recipientName: bankName.trim() || undefined,
+        });
+        toast.success(`${res.data.documentCount} Dokumente an ${email} gesendet`);
+      }
+      setShowSendModal(false);
+      setRecipientEmail('');
+      setRecipientEmailOption('default');
       setBankName('');
+      setSendMethod('secure-link');
       loadEmailHistory();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Fehler beim Senden');
     } finally {
-      setSendingToBank(false);
+      setSendingDocs(false);
     }
   };
 
@@ -540,43 +528,23 @@ export const KundeDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Secure Document Link — for customer */}
+      {/* Unterlagen versenden — unified section */}
       <div className="secure-link-section">
         <div className="secure-link-header">
-          <span className="secure-link-icon">🔒</span>
+          <span className="secure-link-icon">📨</span>
           <div>
-            <h3 className="secure-link-title">Verschlüsselter Dokumenten-Link</h3>
+            <h3 className="secure-link-title">Unterlagen versenden</h3>
             <p className="secure-link-desc">
-              Sendet dem Kunden einen passwortgeschützten Download-Link + separates Passwort per Email.
+              Dokumente per verschlüsseltem Link oder als PDF-Anhang versenden.
             </p>
           </div>
         </div>
         <button
           className="btn btn-primary"
-          onClick={() => setShowSecureLinkModal(true)}
-          disabled={sendingSecureLink}
+          onClick={() => setShowSendModal(true)}
+          disabled={sendingDocs}
         >
-          🔒 Verschlüsselten Link senden
-        </button>
-      </div>
-
-      {/* Send Documents to Bank — always visible */}
-      <div className="secure-link-section">
-        <div className="secure-link-header">
-          <span className="secure-link-icon">🏦</span>
-          <div>
-            <h3 className="secure-link-title">Unterlagen an Bank senden</h3>
-            <p className="secure-link-desc">
-              Sendet alle verarbeiteten Dokumente als PDF-Anhang per Email an den Bankberater.
-            </p>
-          </div>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowBankModal(true)}
-          disabled={sendingToBank}
-        >
-          📨 Unterlagen senden
+          📨 Unterlagen versenden
         </button>
       </div>
 
@@ -611,128 +579,134 @@ export const KundeDetailPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Secure Link Modal */}
-      {showSecureLinkModal && (
-        <div className="modal-overlay" onClick={() => !sendingSecureLink && setShowSecureLinkModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', padding: '24px' }}>
-            <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>🔒 Verschlüsselten Link senden</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 20px' }}>
-              Der Kunde erhält 2 separate Emails: einen Download-Link und ein Passwort.
+      {/* Unterlagen versenden Modal */}
+      {showSendModal && (
+        <div className="modal-overlay" onClick={() => !sendingDocs && setShowSendModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', padding: '24px' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '18px' }}>📨 Unterlagen versenden</h2>
+
+            {/* Send method toggle */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <button
+                style={{
+                  flex: 1, padding: '10px 12px', borderRadius: '8px', border: sendMethod === 'secure-link' ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                  background: sendMethod === 'secure-link' ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                  color: sendMethod === 'secure-link' ? '#2563eb' : '#64748b', transition: 'all 0.15s',
+                }}
+                onClick={() => setSendMethod('secure-link')}
+              >
+                🔒 Verschlüsselter Link
+              </button>
+              <button
+                style={{
+                  flex: 1, padding: '10px 12px', borderRadius: '8px', border: sendMethod === 'pdf-attachment' ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                  background: sendMethod === 'pdf-attachment' ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                  color: sendMethod === 'pdf-attachment' ? '#2563eb' : '#64748b', transition: 'all 0.15s',
+                }}
+                onClick={() => setSendMethod('pdf-attachment')}
+              >
+                📎 PDF-Anhang
+              </button>
+            </div>
+
+            <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 16px', lineHeight: '1.4' }}>
+              {sendMethod === 'secure-link'
+                ? 'Der Empfänger erhält 2 separate Emails: einen Download-Link und ein Passwort.'
+                : 'Alle verarbeiteten Dokumente werden als PDF-Anhang per Email gesendet.'}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
-                  border: secureLinkEmailOption === 'default' ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                  borderRadius: '10px', cursor: 'pointer', background: secureLinkEmailOption === 'default' ? '#eff6ff' : '#fff',
-                }}
-                onClick={() => { setSecureLinkEmailOption('default'); setSecureLinkEmail(''); }}
-              >
-                <input type="radio" name="emailOption" checked={secureLinkEmailOption === 'default'} readOnly style={{ accentColor: '#2563eb' }} />
+            {/* Recipient selection */}
+            {sendMethod === 'secure-link' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                <label
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
+                    border: recipientEmailOption === 'default' ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                    borderRadius: '10px', cursor: 'pointer', background: recipientEmailOption === 'default' ? '#eff6ff' : '#fff',
+                  }}
+                  onClick={() => { setRecipientEmailOption('default'); setRecipientEmail(''); }}
+                >
+                  <input type="radio" name="emailOption" checked={recipientEmailOption === 'default'} readOnly style={{ accentColor: '#2563eb' }} />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '14px' }}>Hinterlegte Email</div>
+                    <div style={{ color: '#64748b', fontSize: '13px' }}>{kunde.email || 'Keine Email hinterlegt'}</div>
+                  </div>
+                </label>
+
+                <label
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
+                    border: recipientEmailOption === 'custom' ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                    borderRadius: '10px', cursor: 'pointer', background: recipientEmailOption === 'custom' ? '#eff6ff' : '#fff',
+                  }}
+                  onClick={() => setRecipientEmailOption('custom')}
+                >
+                  <input type="radio" name="emailOption" checked={recipientEmailOption === 'custom'} readOnly style={{ accentColor: '#2563eb' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>Andere Email-Adresse</div>
+                    {recipientEmailOption === 'custom' && (
+                      <input
+                        type="email"
+                        placeholder="bankberater@bank.at"
+                        value={recipientEmail}
+                        onChange={(e) => setRecipientEmail(e.target.value)}
+                        autoFocus
+                        style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px' }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                  </div>
+                </label>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '14px' }}>Hinterlegte Email</div>
-                  <div style={{ color: '#64748b', fontSize: '13px' }}>{kunde.email || 'Keine Email hinterlegt'}</div>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
+                    Email-Adresse *
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="bankberater@bank.at"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    autoFocus
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                  />
                 </div>
-              </label>
-
-              <label
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
-                  border: secureLinkEmailOption === 'custom' ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                  borderRadius: '10px', cursor: 'pointer', background: secureLinkEmailOption === 'custom' ? '#eff6ff' : '#fff',
-                }}
-                onClick={() => setSecureLinkEmailOption('custom')}
-              >
-                <input type="radio" name="emailOption" checked={secureLinkEmailOption === 'custom'} readOnly style={{ accentColor: '#2563eb' }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>Andere Email-Adresse</div>
-                  {secureLinkEmailOption === 'custom' && (
-                    <input
-                      type="email"
-                      placeholder="email@beispiel.at"
-                      value={secureLinkEmail}
-                      onChange={(e) => setSecureLinkEmail(e.target.value)}
-                      autoFocus
-                      style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px' }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
+                    Name des Empfängers (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="z.B. Herr Müller, Sparkasse"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                  />
                 </div>
-              </label>
-            </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 className="btn btn-secondary"
-                onClick={() => setShowSecureLinkModal(false)}
-                disabled={sendingSecureLink}
+                onClick={() => setShowSendModal(false)}
+                disabled={sendingDocs}
               >
                 Abbrechen
               </button>
               <button
                 className="btn btn-primary"
-                onClick={handleSendSecureLink}
-                disabled={sendingSecureLink || (secureLinkEmailOption === 'custom' && !secureLinkEmail.trim()) || (secureLinkEmailOption === 'default' && !kunde.email)}
+                onClick={handleSendDocuments}
+                disabled={
+                  sendingDocs ||
+                  (sendMethod === 'secure-link' && recipientEmailOption === 'custom' && !recipientEmail.trim()) ||
+                  (sendMethod === 'secure-link' && recipientEmailOption === 'default' && !kunde.email) ||
+                  (sendMethod === 'pdf-attachment' && !recipientEmail.trim())
+                }
               >
-                {sendingSecureLink ? '⏳ Wird gesendet...' : '📨 Senden'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bank Send Modal */}
-      {showBankModal && (
-        <div className="modal-overlay" onClick={() => !sendingToBank && setShowBankModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', padding: '24px' }}>
-            <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>🏦 Unterlagen an Bank senden</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 20px' }}>
-              Alle verarbeiteten Dokumente werden als PDF-Anhang per Email gesendet.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
-                  Email-Adresse des Bankberaters *
-                </label>
-                <input
-                  type="email"
-                  placeholder="bankberater@bank.at"
-                  value={bankEmail}
-                  onChange={(e) => setBankEmail(e.target.value)}
-                  autoFocus
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
-                  Name des Bankberaters (optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="z.B. Herr Müller, Sparkasse"
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowBankModal(false)}
-                disabled={sendingToBank}
-              >
-                Abbrechen
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleSendToBank}
-                disabled={sendingToBank || !bankEmail.trim()}
-              >
-                {sendingToBank ? '⏳ Wird gesendet...' : '📨 Senden'}
+                {sendingDocs ? '⏳ Wird gesendet...' : sendMethod === 'secure-link' ? '🔒 Link senden' : '📎 PDFs senden'}
               </button>
             </div>
           </div>
