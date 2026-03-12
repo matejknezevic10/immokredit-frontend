@@ -119,6 +119,7 @@ export const KundeDetailPage: React.FC = () => {
   const [signatureLinkUrl, setSignatureLinkUrl] = useState('');
   const [signatureLinkLoading, setSignatureLinkLoading] = useState(false);
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
+  const [pflichtfelder, setPflichtfelder] = useState<any>(null);
 
   useEffect(() => {
     if (leadId) {
@@ -127,8 +128,18 @@ export const KundeDetailPage: React.FC = () => {
       loadEmailHistory();
       loadDealStage();
       loadSignatureStatus();
+      loadPflichtfelder();
     }
   }, [leadId]);
+
+  const loadPflichtfelder = async () => {
+    try {
+      const res = await api.get(`/kunde/${leadId}/pflichtfelder`);
+      setPflichtfelder(res.data);
+    } catch (err) {
+      console.error('Failed to load pflichtfelder:', err);
+    }
+  };
 
   const loadKunde = async () => {
     try {
@@ -365,23 +376,45 @@ export const KundeDetailPage: React.FC = () => {
         {tiles.map(tile => {
           const fieldCount = getFilledFieldCount(tile.key);
           const personCount = tile.key === 'person' ? (kunde.personen?.length || (kunde.person ? 1 : 0)) : 0;
+
+          // Pflichtfelder completion check
+          let isComplete = false;
+          let missingCount = 0;
+          if (pflichtfelder) {
+            if (tile.key === 'person') {
+              isComplete = pflichtfelder.person?.complete || false;
+              missingCount = pflichtfelder.person?.personen?.reduce((sum: number, p: any) => sum + (p.missingFields?.length || 0), 0) || 0;
+            } else if (tile.key === 'haushalt') {
+              isComplete = pflichtfelder.haushalt?.complete || false;
+              missingCount = pflichtfelder.haushalt?.missingFields?.length || 0;
+            } else if (tile.key === 'finanzplan') {
+              isComplete = pflichtfelder.finanzplan?.complete || false;
+              missingCount = pflichtfelder.finanzplan?.missingFields?.length || 0;
+            } else if (tile.key === 'objekt') {
+              isComplete = pflichtfelder.objekt?.complete || false;
+              missingCount = pflichtfelder.objekt?.objekte?.reduce((sum: number, o: any) => sum + (o.missingFields?.length || 0), 0) || 0;
+            }
+          }
+
           return (
             <div
               key={tile.key}
-              className={`kunde-tile ${fieldCount > 0 ? 'has-data' : ''}`}
+              className={`kunde-tile ${isComplete ? 'complete' : fieldCount > 0 ? 'has-data' : ''}`}
               onClick={() => navigate(`/kunde/${leadId}/${tile.path}`)}
             >
               <div className="kunde-tile-icon">{tile.icon}</div>
               <div className="kunde-tile-label">{tile.label}</div>
-              {tile.key === 'person' && personCount > 1 && (
+              {isComplete ? (
+                <span className="kunde-tile-count" style={{ color: '#10b981' }}>✅ Vollständig</span>
+              ) : missingCount > 0 ? (
+                <span className="kunde-tile-count" style={{ color: '#f59e0b' }}>
+                  {missingCount} Pflichtfeld{missingCount !== 1 ? 'er' : ''} fehlt
+                </span>
+              ) : tile.key === 'person' && personCount > 1 ? (
                 <span className="kunde-tile-count">{personCount} Kreditnehmer</span>
-              )}
-              {tile.key !== 'person' && fieldCount > 0 && (
+              ) : fieldCount > 0 ? (
                 <span className="kunde-tile-count">{fieldCount} Felder</span>
-              )}
-              {tile.key === 'person' && personCount <= 1 && fieldCount > 0 && (
-                <span className="kunde-tile-count">{fieldCount} Felder</span>
-              )}
+              ) : null}
             </div>
           );
         })}

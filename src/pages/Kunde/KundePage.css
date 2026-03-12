@@ -260,6 +260,11 @@
 }
 
 .kunde-tile.has-data {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.kunde-tile.complete {
   border-color: #d1fae5;
   background: #f0fdf4;
 }
