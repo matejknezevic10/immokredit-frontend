@@ -30,6 +30,7 @@ interface PipedriveDeal {
   updateTime: string;
   leadId: string | null;
   lead: any;
+  signatureSigned: boolean;
 }
 
 interface PipedriveStage {
@@ -324,16 +325,23 @@ export const PipelinePage: React.FC = () => {
                           </div>
                         )}
 
-                        {deal.lead && (deal.lead.ampelStatus !== 'YELLOW' || deal.lead.temperatur !== 'WARM' || deal.lead.score > 0) && (
+                        {(deal.lead || deal.signatureSigned) && (
                           <div className="deal-card-indicators">
-                            <span className="deal-indicator">
-                              {deal.lead.ampelStatus === 'GREEN' ? '🟢' : deal.lead.ampelStatus === 'RED' ? '🔴' : '🟡'}
-                            </span>
-                            <span className="deal-indicator">
-                              {deal.lead.temperatur === 'HOT' ? '🔥' : deal.lead.temperatur === 'COLD' ? '❄️' : '🌤'}
-                            </span>
-                            {deal.lead.score > 0 && (
-                              <span className="deal-indicator deal-score">{deal.lead.score}%</span>
+                            {deal.lead && (
+                              <>
+                                <span className="deal-indicator">
+                                  {deal.lead.ampelStatus === 'GREEN' ? '🟢' : deal.lead.ampelStatus === 'RED' ? '🔴' : '🟡'}
+                                </span>
+                                <span className="deal-indicator">
+                                  {deal.lead.temperatur === 'HOT' ? '🔥' : deal.lead.temperatur === 'COLD' ? '❄️' : '🌤'}
+                                </span>
+                                {deal.lead.score > 0 && (
+                                  <span className="deal-indicator deal-score">{deal.lead.score}%</span>
+                                )}
+                              </>
+                            )}
+                            {deal.signatureSigned && (
+                              <span className="deal-indicator" title="Digital signiert">✍️✅</span>
                             )}
                           </div>
                         )}
