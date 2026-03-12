@@ -64,9 +64,13 @@ export const LeadsPage: React.FC = () => {
 
   const handleAssign = async (lead: Lead) => {
     try {
-      await api.patch(`/leads/${lead.id}`, { assignSelf: true });
+      const res = await api.patch(`/leads/${lead.id}`, { assignSelf: true });
+      // Immediately update the lead in local state for instant UI feedback
+      const updatedLead = res.data;
+      useLeadsStore.setState((state) => ({
+        leads: state.leads.map((l) => l.id === lead.id ? { ...l, assignedTo: updatedLead.assignedTo, assignedToId: updatedLead.assignedToId, assignedAt: updatedLead.assignedAt } : l),
+      }));
       toast.success(`${lead.firstName} ${lead.lastName} dir zugewiesen`);
-      fetchLeads();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Fehler beim Zuweisen');
     }
