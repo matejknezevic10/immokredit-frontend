@@ -26,6 +26,7 @@ export const SecureDownloadPage: React.FC = () => {
   const [validated, setValidated] = useState(false);
   const [leadName, setLeadName] = useState('');
   const [documents, setDocuments] = useState<DocEntry[]>([]);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   const handleValidate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +71,32 @@ export const SecureDownloadPage: React.FC = () => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleDownloadAll = async () => {
+    if (documents.length === 0 || !accessToken) return;
+    setDownloadingAll(true);
+    try {
+      for (const doc of documents) {
+        const url = `${API_BASE}/secure-link/download/${doc.id}?accessToken=${accessToken}&password=${encodeURIComponent(password.toUpperCase())}`;
+        const response = await fetch(url);
+        if (!response.ok) continue;
+        const blob = await response.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = doc.originalFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+        // Small delay between downloads so browser doesn't block them
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } catch (err) {
+      console.error('Download all failed:', err);
+    } finally {
+      setDownloadingAll(false);
+    }
   };
 
   const getTypeLabel = (type: string) => {
@@ -132,6 +159,32 @@ export const SecureDownloadPage: React.FC = () => {
             <p className="secure-download-greeting">
               Hallo {leadName}, hier sind Ihre Dokumente:
             </p>
+
+            {documents.length > 1 && (
+              <button
+                className="secure-download-all-btn"
+                onClick={handleDownloadAll}
+                disabled={downloadingAll}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  marginBottom: '16px',
+                  background: downloadingAll ? '#94a3b8' : 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: downloadingAll ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                {downloadingAll ? '⏳ Wird heruntergeladen...' : `📥 Alle ${documents.length} Dokumente herunterladen`}
+              </button>
+            )}
 
             <div className="secure-download-list">
               {documents.map(doc => (

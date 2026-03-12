@@ -48,9 +48,34 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
   const startRecording = async () => {
     setVoiceError(null);
     setVoiceSuccess(null);
+
+    // Check if mediaDevices API is available (requires HTTPS)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setVoiceError('Mikrofon nicht verfügbar. Bitte stelle sicher, dass du HTTPS verwendest und den Browser aktualisiert hast.');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+      // Determine supported mimeType (audio/webm not supported on iOS Safari)
+      let mimeType = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+          mimeType = 'audio/ogg';
+        } else {
+          // Fallback: let browser choose
+          mimeType = '';
+        }
+      }
+
+      const mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -62,7 +87,8 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const actualMimeType = mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualMimeType });
         await transcribeAudio(audioBlob);
       };
 
@@ -74,10 +100,17 @@ export const CreateLeadModal: React.FC<CreateLeadModalProps> = ({
         setRecordingTime(prev => prev + 1);
       }, 1000);
     } catch (err: any) {
-      if (err.name === 'NotAllowedError') {
-        setVoiceError('Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in den Browser-Einstellungen.');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setVoiceError(
+          'Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff:\n' +
+          '• iPhone/iPad: Einstellungen → Safari → Mikrofon\n' +
+          '• Chrome: Klicke auf das 🔒-Symbol in der Adressleiste → Mikrofon erlauben\n' +
+          '• Dann Seite neu laden.'
+        );
+      } else if (err.name === 'NotFoundError') {
+        setVoiceError('Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.');
       } else {
-        setVoiceError('Mikrofon konnte nicht gestartet werden.');
+        setVoiceError(`Mikrofon konnte nicht gestartet werden: ${err.message}`);
       }
     }
   };
