@@ -1,4 +1,7 @@
 // src/pages/Kunde/KundePersonPage.tsx
+//
+// Multiple Kreditnehmer — up to 5 persons per lead with tab UI
+//
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
@@ -29,30 +32,35 @@ const FIELD_RULES: Record<string, ValidationRule[]> = {
   arbeitgeberPlz: [{ validator: 'plz' }],
 };
 
+const MAX_PERSONS = 5;
+
 export const KundePersonPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const [data, setData] = useState<any>({});
-  const [savedData, setSavedData] = useState<string>('');
+  const [personen, setPersonen] = useState<any[]>([]);
+  const [savedPersonen, setSavedPersonen] = useState<string>('');
+  const [activeIdx, setActiveIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const isDirty = !loading && JSON.stringify(data) !== savedData;
+  const isDirty = !loading && JSON.stringify(personen) !== savedPersonen;
   useUnsavedChanges(isDirty);
 
   useEffect(() => { if (leadId) load(); }, [leadId]);
 
   const load = async () => {
     try {
-      const res = await api.get(`/kunde/${leadId}/person`);
-      setData(res.data);
-      setSavedData(JSON.stringify(res.data));
+      const res = await api.get(`/kunde/${leadId}/personen`);
+      setPersonen(res.data);
+      setSavedPersonen(JSON.stringify(res.data));
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
+
+  const data = personen[activeIdx] || {};
 
   const validateField = (field: string, value: any): string => {
     const rules = FIELD_RULES[field];
@@ -78,15 +86,19 @@ export const KundePersonPage: React.FC = () => {
   };
 
   const save = async () => {
+    if (!data.id) return;
     if (!validateAll()) {
       toast.error('Bitte korrigiere die markierten Felder');
       return;
     }
     setSaving(true);
     try {
-      const { id, leadId: _, createdAt, updatedAt, ...fields } = data;
-      await api.put(`/kunde/${leadId}/person`, fields);
-      setSavedData(JSON.stringify(data));
+      const { id, leadId: _, personNumber, createdAt, updatedAt, ...fields } = data;
+      const res = await api.put(`/kunde/person/${data.id}`, fields);
+      const updated = [...personen];
+      updated[activeIdx] = res.data;
+      setPersonen(updated);
+      setSavedPersonen(JSON.stringify(updated));
       setSaved(true);
       toast.success('Personendaten gespeichert');
       setTimeout(() => setSaved(false), 2000);
@@ -97,8 +109,45 @@ export const KundePersonPage: React.FC = () => {
     finally { setSaving(false); }
   };
 
+  const addPerson = async () => {
+    if (personen.length >= MAX_PERSONS) {
+      toast.error(`Maximal ${MAX_PERSONS} Kreditnehmer erlaubt`);
+      return;
+    }
+    try {
+      const res = await api.post(`/kunde/${leadId}/personen`, {});
+      setPersonen(prev => [...prev, res.data]);
+      setSavedPersonen(JSON.stringify([...personen, res.data]));
+      setActiveIdx(personen.length);
+      setErrors({});
+      setTouched({});
+      toast.success('Kreditnehmer hinzugefügt');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Hinzufügen');
+    }
+  };
+
+  const deletePerson = async () => {
+    if (!data.id || data.personNumber === 1) return;
+    if (!confirm(`Kreditnehmer ${data.vorname || ''} ${data.nachname || ''} wirklich löschen?`)) return;
+    try {
+      await api.delete(`/kunde/person/${data.id}`);
+      const updated = personen.filter((_, i) => i !== activeIdx);
+      setPersonen(updated);
+      setSavedPersonen(JSON.stringify(updated));
+      setActiveIdx(Math.max(0, activeIdx - 1));
+      setErrors({});
+      setTouched({});
+      toast.success('Kreditnehmer gelöscht');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Löschen');
+    }
+  };
+
   const set = (field: string, value: any) => {
-    setData((prev: any) => ({ ...prev, [field]: value }));
+    const updated = [...personen];
+    updated[activeIdx] = { ...updated[activeIdx], [field]: value };
+    setPersonen(updated);
     if (touched[field]) {
       const error = validateField(field, value);
       setErrors(prev => ({ ...prev, [field]: error }));
@@ -111,22 +160,61 @@ export const KundePersonPage: React.FC = () => {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  // Shorthand to reduce boilerplate — shared props for all fields
+  // Reset errors/touched when switching tabs
+  const switchTab = (idx: number) => {
+    setActiveIdx(idx);
+    setErrors({});
+    setTouched({});
+  };
+
   const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], onChange: set, onBlur: handleBlur });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 
   const errorCount = Object.values(errors).filter(Boolean).length;
+  const personLabel = (p: any, i: number) => {
+    if (p.vorname || p.nachname) return `${i + 1}. ${p.vorname || ''} ${p.nachname || ''}`.trim();
+    return `${i + 1}. Kreditnehmer`;
+  };
 
   return (
     <div className="kf-page">
       <div className="kf-header">
         <button className="btn-back" onClick={() => navigate(`/kunde/${leadId}`)}>← Zurück</button>
-        <h1 className="kf-title">👤 Person</h1>
+        <h1 className="kf-title">👤 Personen</h1>
         <button className="kf-save-btn" onClick={save} disabled={saving}>
           {saving ? '⏳ Speichern...' : saved ? '✅ Gespeichert' : '💾 Speichern'}
         </button>
       </div>
+
+      {/* Tabs */}
+      <div className="kf-tabs">
+        {personen.map((p, i) => (
+          <button
+            key={p.id}
+            className={`kf-tab ${i === activeIdx ? 'active' : ''}`}
+            onClick={() => switchTab(i)}
+          >
+            {personLabel(p, i)}
+          </button>
+        ))}
+        {personen.length < MAX_PERSONS && (
+          <button className="kf-tab kf-tab-add" onClick={addPerson}>+ Kreditnehmer</button>
+        )}
+      </div>
+
+      {/* Delete button for non-primary persons */}
+      {data.personNumber > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+          <button
+            className="btn btn-danger"
+            onClick={deletePerson}
+            style={{ fontSize: '13px', padding: '6px 14px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+          >
+            🗑 Kreditnehmer löschen
+          </button>
+        </div>
+      )}
 
       {errorCount > 0 && (
         <div className="kf-validation-summary">
@@ -135,14 +223,16 @@ export const KundePersonPage: React.FC = () => {
         </div>
       )}
 
-      {/* Finanzierungsmappe */}
-      <div className="kf-section">
-        <h3 className="kf-section-title">Finanzierungsmappe</h3>
-        <div className="kf-row">
-          <FormField label="Berater" field="berater" half {...fp('berater')} />
-          <FormField label="Finanzierungsstandort" field="finanzierungsstandort" half {...fp('finanzierungsstandort')} />
+      {/* Finanzierungsmappe — only for primary person */}
+      {data.personNumber === 1 && (
+        <div className="kf-section">
+          <h3 className="kf-section-title">Finanzierungsmappe</h3>
+          <div className="kf-row">
+            <FormField label="Berater" field="berater" half {...fp('berater')} />
+            <FormField label="Finanzierungsstandort" field="finanzierungsstandort" half {...fp('finanzierungsstandort')} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Person */}
       <div className="kf-section">

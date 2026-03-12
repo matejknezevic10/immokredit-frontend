@@ -14,6 +14,7 @@ interface KundeOverview {
   email: string;
   phone: string;
   person: any | null;
+  personen: any[];
   haushalt: any | null;
   finanzplan: any | null;
   objekte: any[];
@@ -254,12 +255,12 @@ export const KundeDetailPage: React.FC = () => {
   const getFilledFieldCount = (key: string) => {
     if (!kunde) return 0;
     let data: any = null;
-    if (key === 'person') data = kunde.person;
+    if (key === 'person') data = kunde.personen?.[0] || kunde.person;
     if (key === 'haushalt') data = kunde.haushalt;
     if (key === 'finanzplan') data = kunde.finanzplan;
     if (key === 'objekt') data = kunde.objekte[0] || null;
     if (!data) return 0;
-    const skip = ['id', 'leadId', 'createdAt', 'updatedAt'];
+    const skip = ['id', 'leadId', 'personNumber', 'createdAt', 'updatedAt'];
     return Object.entries(data).filter(([k, v]) =>
       !skip.includes(k) && v !== null && v !== undefined && v !== ''
     ).length;
@@ -363,6 +364,7 @@ export const KundeDetailPage: React.FC = () => {
       <div className="kunde-tiles">
         {tiles.map(tile => {
           const fieldCount = getFilledFieldCount(tile.key);
+          const personCount = tile.key === 'person' ? (kunde.personen?.length || (kunde.person ? 1 : 0)) : 0;
           return (
             <div
               key={tile.key}
@@ -371,7 +373,13 @@ export const KundeDetailPage: React.FC = () => {
             >
               <div className="kunde-tile-icon">{tile.icon}</div>
               <div className="kunde-tile-label">{tile.label}</div>
-              {fieldCount > 0 && (
+              {tile.key === 'person' && personCount > 1 && (
+                <span className="kunde-tile-count">{personCount} Kreditnehmer</span>
+              )}
+              {tile.key !== 'person' && fieldCount > 0 && (
+                <span className="kunde-tile-count">{fieldCount} Felder</span>
+              )}
+              {tile.key === 'person' && personCount <= 1 && fieldCount > 0 && (
                 <span className="kunde-tile-count">{fieldCount} Felder</span>
               )}
             </div>
