@@ -1,0 +1,151 @@
+/* src/pages/Statistik/StatistikPage.css */
+
+.statistik-page {
+  padding: 24px 32px;
+  max-width: 1400px;
+}
+
+.statistik-loading {
+  padding: 60px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+.statistik-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.statistik-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.statistik-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.statistik-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.statistik-export-btn:hover {
+  background: #059669;
+}
+
+/* Summary Cards */
+.statistik-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.stat-card.accent {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.stat-card.accent .stat-card-value {
+  color: #0369a1;
+}
+
+.stat-card-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Chart Cards */
+.statistik-chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  min-width: 0;
+}
+
+.statistik-chart-card.full-width {
+  margin-bottom: 24px;
+}
+
+.chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 16px;
+}
+
+/* Charts Grid */
+.statistik-charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .statistik-page {
+    padding: 16px;
+  }
+
+  .statistik-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statistik-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .statistik-summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-card-value {
+    font-size: 22px;
+  }
+}

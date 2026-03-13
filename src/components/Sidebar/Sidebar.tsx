@@ -23,6 +23,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
       { id: 'pipeline', label: 'Pipeline', icon: '🎯', path: '/pipeline', badgeKey: 'activeDeals' },
       { id: 'leads', label: 'Leads', icon: '👥', path: '/leads', badgeKey: 'totalLeads' },
       { id: 'documents', label: 'Dokumente', icon: '📄', path: '/documents', badgeKey: undefined },
+      { id: 'statistik', label: 'Statistik', icon: '📈', path: '/statistik' },
     ],
   },
   {

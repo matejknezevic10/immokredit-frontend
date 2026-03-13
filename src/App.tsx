@@ -20,6 +20,7 @@ import {
   KundeObjektPage,
 } from './pages/Kunde';
 import { ArchivPage } from './pages/Archiv/ArchivPage';
+import { StatistikPage } from './pages/Statistik/StatistikPage';
 import { SecureDownloadPage } from './pages/SecureDownload/SecureDownloadPage';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import logoImg from './assets/logo.png';
@@ -86,6 +87,7 @@ function AppRoutes() {
           <Route path="/kunde/:leadId/finanzplan" element={<KundeFinanzplanPage />} />
           <Route path="/kunde/:leadId/objekt" element={<KundeObjektPage />} />
           <Route path="/archiv" element={<ArchivPage />} />
+          <Route path="/statistik" element={<StatistikPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>
