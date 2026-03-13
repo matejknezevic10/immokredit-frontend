@@ -151,7 +151,7 @@ export const StatistikPage: React.FC = () => {
                 cx="50%" cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, value }) => `${name} (${value})`}
+                label={({ name, value }: any) => `${name} (${value})`}
                 labelLine={{ stroke: '#94a3b8' }}
               >
                 {charts.sourceVerteilung.map((_, i) => (
@@ -173,7 +173,7 @@ export const StatistikPage: React.FC = () => {
                 cx="50%" cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, value }) => `${name} (${value})`}
+                label={({ name, value }: any) => `${name} (${value})`}
                 labelLine={{ stroke: '#94a3b8' }}
               >
                 {charts.ampelVerteilung.map((entry, i) => (
@@ -195,7 +195,7 @@ export const StatistikPage: React.FC = () => {
                 cx="50%" cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, value }) => `${name} (${value})`}
+                label={({ name, value }: any) => `${name} (${value})`}
                 labelLine={{ stroke: '#94a3b8' }}
               >
                 {charts.temperaturVerteilung.map((entry, i) => (
