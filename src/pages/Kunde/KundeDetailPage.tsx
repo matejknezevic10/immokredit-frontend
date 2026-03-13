@@ -121,6 +121,13 @@ export const KundeDetailPage: React.FC = () => {
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
   const [pflichtfelder, setPflichtfelder] = useState<any>(null);
 
+  // Stellungnahme
+  const [showStellungnahme, setShowStellungnahme] = useState(false);
+  const [stellungnahmeText, setStellungnahmeText] = useState('');
+  const [stellungnahmeCustomerName, setStellungnahmeCustomerName] = useState('');
+  const [stellungnahmeGenerating, setStellungnahmeGenerating] = useState(false);
+  const [stellungnahmePdfLoading, setStellungnahmePdfLoading] = useState(false);
+
   useEffect(() => {
     if (leadId) {
       loadKunde();
@@ -260,6 +267,49 @@ export const KundeDetailPage: React.FC = () => {
       setOcrError(err.response?.data?.error || 'Analyse fehlgeschlagen');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const allPflichtfelderComplete = pflichtfelder
+    ? (pflichtfelder.person?.complete && pflichtfelder.haushalt?.complete && pflichtfelder.finanzplan?.complete && pflichtfelder.objekt?.complete)
+    : false;
+
+  const handleGenerateStellungnahme = async () => {
+    if (!leadId) return;
+    setStellungnahmeGenerating(true);
+    setStellungnahmeText('');
+    setShowStellungnahme(true);
+    try {
+      const res = await api.post(`/stellungnahme/${leadId}/generate`);
+      // Convert **HEADING**: markers to readable format for editing
+      const rawText = res.data.text || '';
+      setStellungnahmeText(rawText);
+      setStellungnahmeCustomerName(res.data.customerName || `${kunde?.firstName} ${kunde?.lastName}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim Generieren');
+      setShowStellungnahme(false);
+    } finally {
+      setStellungnahmeGenerating(false);
+    }
+  };
+
+  const handleStellungnahmePDF = async () => {
+    if (!leadId || !stellungnahmeText) return;
+    setStellungnahmePdfLoading(true);
+    try {
+      const res = await api.post(`/stellungnahme/${leadId}/pdf`, {
+        text: stellungnahmeText,
+        customerName: stellungnahmeCustomerName,
+      });
+      toast.success('PDF erstellt und in Google Drive gespeichert!');
+      if (res.data.webViewLink) {
+        window.open(res.data.webViewLink, '_blank');
+      }
+      setShowStellungnahme(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Fehler beim PDF erstellen');
+    } finally {
+      setStellungnahmePdfLoading(false);
     }
   };
 
@@ -606,6 +656,91 @@ export const KundeDetailPage: React.FC = () => {
                 `${s.signerName} (${new Date(s.signedAt).toLocaleDateString('de-AT')})`
               ).join(', ')}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Stellungnahme erstellen */}
+      <div className="secure-link-section">
+        <div className="secure-link-header">
+          <span className="secure-link-icon">📝</span>
+          <div>
+            <h3 className="secure-link-title">Stellungnahme</h3>
+            <p className="secure-link-desc">
+              {allPflichtfelderComplete
+                ? 'Automatische Stellungnahme zur geplanten Finanzierung erstellen.'
+                : 'Alle 4 Kategorien müssen vollständig (grün) sein.'}
+            </p>
+          </div>
+        </div>
+        <button
+          className="btn btn-primary"
+          disabled={!allPflichtfelderComplete || stellungnahmeGenerating}
+          onClick={handleGenerateStellungnahme}
+        >
+          {stellungnahmeGenerating ? '⏳ Generiere...' : '📝 Stellungnahme erstellen'}
+        </button>
+      </div>
+
+      {/* Stellungnahme Preview/Edit Modal */}
+      {showStellungnahme && (
+        <div className="modal-overlay" onClick={() => !stellungnahmeGenerating && !stellungnahmePdfLoading && setShowStellungnahme(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', padding: '24px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '18px' }}>📝 Stellungnahme — {stellungnahmeCustomerName}</h2>
+              <button
+                onClick={() => setShowStellungnahme(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {stellungnahmeGenerating ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ fontSize: '32px' }}>🤖</div>
+                <p style={{ color: '#64748b', fontSize: '14px' }}>Jeffrey erstellt die Stellungnahme...</p>
+              </div>
+            ) : (
+              <>
+                <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 12px' }}>
+                  Überprüfe und bearbeite den Text. Überschriften beginnen mit <code>**HEADING**:</code>
+                </p>
+                <textarea
+                  value={stellungnahmeText}
+                  onChange={(e) => setStellungnahmeText(e.target.value)}
+                  style={{
+                    flex: 1,
+                    minHeight: '400px',
+                    width: '100%',
+                    padding: '16px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    lineHeight: '1.6',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowStellungnahme(false)}
+                    disabled={stellungnahmePdfLoading}
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleStellungnahmePDF}
+                    disabled={stellungnahmePdfLoading || !stellungnahmeText.trim()}
+                  >
+                    {stellungnahmePdfLoading ? '⏳ PDF wird erstellt...' : '📄 PDF erstellen & speichern'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
