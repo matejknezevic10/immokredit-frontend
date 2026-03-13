@@ -121,6 +121,9 @@ export const KundeDetailPage: React.FC = () => {
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
   const [pflichtfelder, setPflichtfelder] = useState<any>(null);
 
+  // Fehlende Pflichtfelder Modal
+  const [showPflichtfelderModal, setShowPflichtfelderModal] = useState(false);
+
   // Stellungnahme
   const [showStellungnahme, setShowStellungnahme] = useState(false);
   const [stellungnahmeText, setStellungnahmeText] = useState('');
@@ -273,6 +276,58 @@ export const KundeDetailPage: React.FC = () => {
   const allPflichtfelderComplete = pflichtfelder
     ? (pflichtfelder.person?.complete && pflichtfelder.haushalt?.complete && pflichtfelder.finanzplan?.complete && pflichtfelder.objekt?.complete)
     : false;
+
+  // Collect all missing pflichtfelder for the modal
+  const getMissingFieldsGrouped = () => {
+    if (!pflichtfelder) return [];
+    const groups: { section: string; path: string; fields: { field: string; label: string }[] }[] = [];
+
+    // Person
+    if (pflichtfelder.person?.personen) {
+      for (const p of pflichtfelder.person.personen) {
+        if (p.missingFields?.length > 0) {
+          groups.push({
+            section: p.name || `Kreditnehmer ${p.personNumber}`,
+            path: 'person',
+            fields: p.missingFields,
+          });
+        }
+      }
+    }
+
+    // Haushalt
+    if (pflichtfelder.haushalt?.missingFields?.length > 0) {
+      groups.push({
+        section: 'Haushalt',
+        path: 'haushalt',
+        fields: pflichtfelder.haushalt.missingFields,
+      });
+    }
+
+    // Finanzplan
+    if (pflichtfelder.finanzplan?.missingFields?.length > 0) {
+      groups.push({
+        section: 'Finanzplan',
+        path: 'finanzplan',
+        fields: pflichtfelder.finanzplan.missingFields,
+      });
+    }
+
+    // Objekt
+    if (pflichtfelder.objekt?.objekte) {
+      for (const o of pflichtfelder.objekt.objekte) {
+        if (o.missingFields?.length > 0) {
+          groups.push({
+            section: `Objekt ${o.objektNumber}`,
+            path: 'objekt',
+            fields: o.missingFields,
+          });
+        }
+      }
+    }
+
+    return groups;
+  };
 
   const handleGenerateStellungnahme = async () => {
     if (!leadId) return;
@@ -469,6 +524,99 @@ export const KundeDetailPage: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Fehlende Pflichtfelder — Button + Modal */}
+      {pflichtfelder && !allPflichtfelderComplete && (
+        <button
+          className="pflichtfelder-btn"
+          onClick={() => setShowPflichtfelderModal(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            margin: '8px 0 0', padding: '10px 16px',
+            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px',
+            color: '#92400e', fontSize: '13px', fontWeight: 600,
+            cursor: 'pointer', width: '100%', justifyContent: 'center',
+          }}
+        >
+          ⚠️ Fehlende Pflichtfelder anzeigen
+        </button>
+      )}
+
+      {showPflichtfelderModal && pflichtfelder && (
+        <div className="modal-overlay" onClick={() => setShowPflichtfelderModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', padding: '0', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ padding: '20px 24px 12px', borderBottom: '1px solid #f1f5f9' }}>
+              <h2 style={{ margin: '0 0 6px', fontSize: '17px', fontWeight: 700 }}>Fehlende Pflichteingaben</h2>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '13px', lineHeight: '1.4' }}>
+                Es wurden nicht alle Pflichtfelder ausgefüllt. Bitte überprüfen Sie folgende Angaben:
+              </p>
+            </div>
+
+            {/* Scrollable list */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+              {getMissingFieldsGrouped().map((group, gi) => (
+                <div key={gi}>
+                  {/* Section header */}
+                  <div
+                    style={{
+                      padding: '10px 24px 6px',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      borderTop: gi > 0 ? '1px solid #f1f5f9' : 'none',
+                    }}
+                  >
+                    {group.section}
+                  </div>
+
+                  {/* Field items — clickable → navigate */}
+                  {group.fields.map((f: any, fi: number) => (
+                    <div
+                      key={fi}
+                      onClick={() => {
+                        setShowPflichtfelderModal(false);
+                        navigate(`/kunde/${leadId}/${group.path}`);
+                      }}
+                      style={{
+                        padding: '10px 24px',
+                        fontSize: '13px',
+                        color: '#475569',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span style={{ color: '#f59e0b', fontSize: '10px' }}>●</span>
+                      {f.label}
+                      <span style={{ marginLeft: 'auto', color: '#cbd5e1', fontSize: '16px' }}>›</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '12px 24px', borderTop: '1px solid #f1f5f9' }}>
+              <button
+                onClick={() => setShowPflichtfelderModal(false)}
+                style={{
+                  width: '100%', padding: '12px',
+                  background: '#ef4444', color: '#fff', border: 'none',
+                  borderRadius: '10px', fontSize: '14px', fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Schließen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Kennzahlen Section */}
       {kennzahlen && (
@@ -675,8 +823,14 @@ export const KundeDetailPage: React.FC = () => {
         </div>
         <button
           className="btn btn-primary"
-          disabled={!allPflichtfelderComplete || stellungnahmeGenerating}
-          onClick={handleGenerateStellungnahme}
+          disabled={stellungnahmeGenerating}
+          onClick={() => {
+            if (!allPflichtfelderComplete) {
+              setShowPflichtfelderModal(true);
+            } else {
+              handleGenerateStellungnahme();
+            }
+          }}
         >
           {stellungnahmeGenerating ? '⏳ Generiere...' : '📝 Stellungnahme erstellen'}
         </button>
