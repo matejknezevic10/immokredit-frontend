@@ -322,16 +322,17 @@ function prevStep() { if (currentStep > 1) { currentStep--; showStep(currentStep
 
 // Scoring
 function calculateScore() {
+  // Synchronized with backend scoring (max raw = 123, normalized to 100)
   let s = 0;
-  s += ({ 'Haus': 8, 'Wohnung': 8, 'Grundstück': 6, 'Umschuldung': 7 })[answers.finanzierungsart] || 5;
-  s += answers.immobilieGefunden === 'Ja' ? 12 : 4;
-  s += ({ 'Bis 150.000 €': 8, '150.000 € – 300.000 €': 12, '300.000 € – 500.000 €': 15, 'Über 500.000 €': 15 })[answers.kaufpreis] || 5;
-  s += ({ 'Unter 10.000 €': 5, '10.000 – 30.000 €': 12, '30.000 – 50.000 €': 20, 'Über 50.000 €': 25 })[answers.eigenmittel] || 5;
-  s += ({ 'Unter 2.500 €': 6, '2.500 € – 4.000 €': 13, '4.000 € – 6.000 €': 18, 'Über 6.000 €': 20 })[answers.einkommen] || 5;
-  s += ({ 'Angestellt': 20, 'Selbstständig': 14, 'Pensionist': 10, 'Arbeitslos': 3 })[answers.beruf] || 5;
-  return Math.min(s, 100);
+  s += ({ 'Haus': 8, 'Wohnung': 8, 'Grundstück': 6, 'Umschuldung': 7 })[answers.finanzierungsart] || 6;
+  s += answers.immobilieGefunden === 'Ja' ? 20 : 4;
+  s += ({ 'Bis 150.000 €': 8, '150.000 € – 300.000 €': 12, '300.000 € – 500.000 €': 15, 'Über 500.000 €': 15 })[answers.kaufpreis] || 8;
+  s += ({ 'Unter 10.000 €': 5, '10.000 – 30.000 €': 20, '30.000 – 50.000 €': 35, 'Über 50.000 €': 40 })[answers.eigenmittel] || 5;
+  s += ({ 'Unter 2.500 €': 6, '2.500 € – 4.000 €': 13, '4.000 € – 6.000 €': 18, 'Über 6.000 €': 20 })[answers.einkommen] || 6;
+  s += ({ 'Angestellt': 20, 'Selbstständig': 14, 'Pensionist': 10, 'Arbeitslos': 3 })[answers.beruf] || 10;
+  return Math.round(Math.min(100, (s / 123) * 100));
 }
-function getTemperatur(s) { return s >= 70 ? 'HOT' : s >= 45 ? 'WARM' : 'COLD'; }
+function getTemperatur(s) { return s >= 70 ? 'HOT' : s >= 40 ? 'WARM' : 'COLD'; }
 
 // Submit
 async function submitFunnel() {
