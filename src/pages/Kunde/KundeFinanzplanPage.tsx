@@ -1,17 +1,17 @@
 // src/pages/Kunde/KundeFinanzplanPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { usePflichtfelder } from '@/hooks/usePflichtfelder';
 import './KundeForm.css';
 
 export const KundeFinanzplanPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const highlightField = searchParams.get('highlight') || '';
+  const { isHighlighted } = usePflichtfelder({ leadId, section: 'finanzplan' });
   const [data, setData] = useState<any>({});
   const [savedData, setSavedData] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ export const KundeFinanzplanPage: React.FC = () => {
 
   const set = (field: string, value: any) => setData((p: any) => ({ ...p, [field]: value }));
 
-  const fp = (field: string) => ({ value: data[field], highlighted: highlightField === field, onChange: set });
+  const fp = (field: string) => ({ value: data[field], highlighted: isHighlighted(field), onChange: set });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 

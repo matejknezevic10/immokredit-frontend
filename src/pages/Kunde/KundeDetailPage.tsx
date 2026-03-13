@@ -580,7 +580,7 @@ export const KundeDetailPage: React.FC = () => {
                       key={fi}
                       onClick={() => {
                         setShowPflichtfelderModal(false);
-                        navigate(`/kunde/${leadId}/${group.path}?highlight=${f.field}`);
+                        navigate(`/kunde/${leadId}/${group.path}?showMissing=true&scrollTo=${f.field}`);
                       }}
                       style={{
                         padding: '10px 24px',

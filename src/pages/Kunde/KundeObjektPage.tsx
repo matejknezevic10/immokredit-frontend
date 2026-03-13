@@ -1,18 +1,18 @@
 // src/pages/Kunde/KundeObjektPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
 import { TagInput } from '@/components/TagInput';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { usePflichtfelder } from '@/hooks/usePflichtfelder';
 import './KundeForm.css';
 
 export const KundeObjektPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const highlightField = searchParams.get('highlight') || '';
+  const { isHighlighted } = usePflichtfelder({ leadId, section: 'objekt' });
   const [objekte, setObjekte] = useState<any[]>([]);
   const [savedObjekte, setSavedObjekte] = useState<string>('');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -76,7 +76,7 @@ export const KundeObjektPage: React.FC = () => {
     setObjekte(updated);
   };
 
-  const fp = (field: string) => ({ value: data[field], highlighted: highlightField === field, onChange: set });
+  const fp = (field: string) => ({ value: data[field], highlighted: isHighlighted(field), onChange: set });
 
   const updateJson = (field: string, key: string, value: any) => {
     const updated = [...objekte];
