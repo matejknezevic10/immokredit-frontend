@@ -1,6 +1,6 @@
 // src/pages/Kunde/KundeHaushaltPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
@@ -65,6 +65,8 @@ const NEUE_VERPFLICHTUNGEN_COLUMNS: ArrayColumn[] = [
 export const KundeHaushaltPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightField = searchParams.get('highlight') || '';
   const [data, setData] = useState<any>({});
   const [savedData, setSavedData] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -141,7 +143,7 @@ export const KundeHaushaltPage: React.FC = () => {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], onChange: set, onBlur: handleBlur });
+  const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], highlighted: highlightField === field, onChange: set, onBlur: handleBlur });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 

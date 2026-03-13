@@ -3,7 +3,7 @@
 // Multiple Kreditnehmer — up to 5 persons per lead with tab UI
 //
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { FormField } from '@/components/FormField';
@@ -37,6 +37,8 @@ const MAX_PERSONS = 5;
 export const KundePersonPage: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightField = searchParams.get('highlight') || '';
   const [personen, setPersonen] = useState<any[]>([]);
   const [savedPersonen, setSavedPersonen] = useState<string>('');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -167,7 +169,7 @@ export const KundePersonPage: React.FC = () => {
     setTouched({});
   };
 
-  const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], onChange: set, onBlur: handleBlur });
+  const fp = (field: string) => ({ value: data[field], error: errors[field], touched: touched[field], highlighted: highlightField === field, onChange: set, onBlur: handleBlur });
 
   if (loading) return <div className="kf-page"><div className="kf-loading">Lade...</div></div>;
 

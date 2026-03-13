@@ -1,8 +1,9 @@
 // src/pages/Kunde/KundeDetailPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
+import { Archive } from 'lucide-react';
 import { SignaturePad } from '@/components/Signature/SignaturePad';
 import { JeffreyModal } from '@/components/Leads/JeffreyModal';
 import './KundePage.css';
@@ -409,7 +410,7 @@ export const KundeDetailPage: React.FC = () => {
           }}
           title="Archivieren"
         >
-          📦
+          <Archive size={16} />
         </button>
       </div>
 
@@ -525,20 +526,23 @@ export const KundeDetailPage: React.FC = () => {
         })}
       </div>
 
-      {/* Fehlende Pflichtfelder — Button + Modal */}
+      {/* Fehlende Pflichtfelder — Button */}
       {pflichtfelder && !allPflichtfelderComplete && (
         <button
           className="pflichtfelder-btn"
           onClick={() => setShowPflichtfelderModal(true)}
           style={{
             display: 'flex', alignItems: 'center', gap: '8px',
-            margin: '8px 0 0', padding: '10px 16px',
-            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px',
-            color: '#92400e', fontSize: '13px', fontWeight: 600,
-            cursor: 'pointer', width: '100%', justifyContent: 'center',
+            margin: '-8px 0 16px', padding: '10px 16px',
+            background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px',
+            color: '#64748b', fontSize: '13px', fontWeight: 500,
+            cursor: 'pointer', maxWidth: '900px', justifyContent: 'center',
+            transition: 'all 0.2s',
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#f59e0b'; e.currentTarget.style.color = '#92400e'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
         >
-          ⚠️ Fehlende Pflichtfelder anzeigen
+          <span style={{ color: '#f59e0b' }}>⚠</span> Fehlende Pflichtfelder anzeigen
         </button>
       )}
 
@@ -576,7 +580,7 @@ export const KundeDetailPage: React.FC = () => {
                       key={fi}
                       onClick={() => {
                         setShowPflichtfelderModal(false);
-                        navigate(`/kunde/${leadId}/${group.path}`);
+                        navigate(`/kunde/${leadId}/${group.path}?highlight=${f.field}`);
                       }}
                       style={{
                         padding: '10px 24px',
@@ -606,7 +610,7 @@ export const KundeDetailPage: React.FC = () => {
                 onClick={() => setShowPflichtfelderModal(false)}
                 style={{
                   width: '100%', padding: '12px',
-                  background: '#ef4444', color: '#fff', border: 'none',
+                  background: '#3b82f6', color: '#fff', border: 'none',
                   borderRadius: '10px', fontSize: '14px', fontWeight: 600,
                   cursor: 'pointer',
                 }}

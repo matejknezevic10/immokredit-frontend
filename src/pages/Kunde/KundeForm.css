@@ -382,6 +382,24 @@
   border-color: #3b82f6;
 }
 
+/* ── Field Highlighting (Pflichtfelder navigation) ── */
+.kf-field-highlighted {
+  animation: highlightPulse 2s ease-out;
+  border-radius: 8px;
+  position: relative;
+}
+
+.kf-input-highlight {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
+  background: #fffbeb !important;
+}
+
+@keyframes highlightPulse {
+  0% { background: rgba(245, 158, 11, 0.15); }
+  100% { background: transparent; }
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .kf-page {
