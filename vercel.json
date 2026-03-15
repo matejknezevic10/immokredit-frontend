@@ -8,7 +8,7 @@
     {
       "source": "/onepage-funnel",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://immo-kredit.net https://www.immo-kredit.net" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://immo-kredit.net https://www.immo-kredit.net https://immo-kredit.app https://www.immo-kredit.app" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
@@ -19,7 +19,7 @@
     {
       "source": "/funnel.html",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://immo-kredit.net https://www.immo-kredit.net" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://immo-kredit.net https://www.immo-kredit.net https://immo-kredit.app https://www.immo-kredit.app" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },

@@ -1,0 +1,31 @@
+<script>
+setTimeout(function() {
+  var isKontaktformular = window.location.pathname.toLowerCase().includes('kontaktformular');
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://immo-kredit.app/funnel.html';
+  iframe.width = '100%';
+  iframe.height = '750';
+  iframe.frameBorder = '0';
+  iframe.scrolling = 'no';
+  iframe.allow = 'clipboard-write';
+  iframe.style.cssText = 'border:none; display:block; border-radius:16px; overflow:hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.12); max-width:1200px; margin:0 auto;';
+  if (isKontaktformular) {
+    var quizSection = document.querySelector('section.kontaktformular');
+    if (quizSection) {
+      var wrapper = document.createElement('div');
+      wrapper.style.cssText = 'width:100%; padding:0; background:transparent;';
+      wrapper.appendChild(iframe);
+      quizSection.parentNode.replaceChild(wrapper, quizSection);
+    }
+  } else {
+    var sections = document.querySelectorAll('section');
+    if (sections.length > 13) {
+      var target = sections[13];
+      var container = document.createElement('div');
+      container.style.cssText = 'width:100%; max-width:1200px; margin:0 auto; padding:40px 20px;';
+      container.appendChild(iframe);
+      target.appendChild(container);
+    }
+  }
+}, 3000);
+</script>

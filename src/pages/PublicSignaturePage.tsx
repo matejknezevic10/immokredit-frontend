@@ -25,7 +25,7 @@ const REQUIRED_CHECKBOXES = [
     id: 'dsgvo',
     label: 'Datenschutz & Banken-Weitergabe (DSGVO)',
     text: 'Ich willige ein, dass meine Daten zum Zweck der Kreditprüfung an potenzielle Bankpartner übermittelt werden dürfen (gemäß der Datenschutzerklärung).',
-    link: { text: 'Datenschutzerklärung', url: 'https://immo-kredit.net/datenschutz' },
+    link: { text: 'Datenschutzerklärung', url: 'https://immo-kredit.app/datenschutz' },
   },
   {
     id: 'electronic',
